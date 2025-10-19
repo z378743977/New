@@ -722,9 +722,19 @@
 
         function getFieldsList(lang) {
             if (lang === 'ko') {
-                return ['name', 'birthday', 'address', 'residentNum', 'phone', 'position', 'experience', 'signature'];
+                return ['name', 'birthday', 'address', 'residentNum', 'phone', 'position', 'experience', 'month', 'day', 'checkmark', 'signature'];
             }
-            return ['name', 'birthday', 'address', 'position', 'passport', 'phone', 'experience', 'signature'];
+            return ['name', 'birthday', 'address', 'position', 'passport', 'phone', 'experience', 'month', 'day', 'checkmark', 'signature'];
+        }
+        
+        function getCurrentMonth() {
+            const now = new Date();
+            return String(now.getMonth() + 1); // 月份从0开始，所以+1
+        }
+        
+        function getCurrentDay() {
+            const now = new Date();
+            return String(now.getDate());
         }
 
         function startDrawing(e) {
@@ -798,11 +808,17 @@
                         // 获取基础字段名（去掉 _1, _2 等后缀）
                         const baseField = pos.baseField || fieldKey;
                         
-                        if (pos && state.formData[baseField]) {
-                            ctx.font = `${pos.fontSize || 44}px Arial`;
-                            ctx.fillStyle = pos.color || '#000000';
-                            
-                            let textValue = state.formData[baseField];
+                        let textValue = '';
+                        
+                        // 特殊字段处理
+                        if (baseField === 'month') {
+                            textValue = getCurrentMonth();
+                        } else if (baseField === 'day') {
+                            textValue = getCurrentDay();
+                        } else if (baseField === 'checkmark') {
+                            textValue = '✓';
+                        } else if (pos && state.formData[baseField]) {
+                            textValue = state.formData[baseField];
                             
                             // 特殊字段格式化
                             if (baseField === 'experience' && textValue) {
@@ -812,7 +828,11 @@
                             else if (baseField === 'position' && textValue) {
                                 textValue = convertPositionToKorean(textValue);
                             }
-                            
+                        }
+                        
+                        if (textValue && pos) {
+                            ctx.font = `${pos.fontSize || 44}px Arial`;
+                            ctx.fillStyle = pos.color || '#000000';
                             ctx.fillText(textValue, pos.x, pos.y);
                         }
                     });
@@ -929,6 +949,17 @@
                 return numbers.slice(0, 3) + '-' + numbers.slice(3);
             } else {
                 return numbers.slice(0, 3) + '-' + numbers.slice(3, 7) + '-' + numbers.slice(7, 11);
+            }
+        }
+        
+        function formatResidentNum(value) {
+            // 只保留数字
+            const numbers = value.replace(/\D/g, '');
+            // 格式化为 xxxxxx-xxxxxxx (6位-7位)
+            if (numbers.length <= 6) {
+                return numbers;
+            } else {
+                return numbers.slice(0, 6) + '-' + numbers.slice(6, 13);
             }
         }
         
@@ -1111,8 +1142,11 @@
                 position: { zh: '整理', ko: '정리', vi: '정리', ru: '정리' },
                 passport: { zh: 'E12345678', ko: 'M12345678', vi: 'B1234567', ru: 'AB1234567' },
                 phone: { zh: '138-0013-8000', ko: '010-1234-5678', vi: '091-2345-678', ru: '+7 900 123-45-67' },
-                residentNum: { zh: '110101199001011234', ko: '900101-1234567', vi: '001090001234', ru: '1234 567890' },
+                residentNum: { zh: '110101-1990011234', ko: '900101-1234567', vi: '001090-0001234', ru: '123456-7890123' },
                 experience: { zh: '3년', ko: '3년', vi: '3년', ru: '3년' },
+                month: { zh: getCurrentMonth(), ko: getCurrentMonth(), vi: getCurrentMonth(), ru: getCurrentMonth() },
+                day: { zh: getCurrentDay(), ko: getCurrentDay(), vi: getCurrentDay(), ru: getCurrentDay() },
+                checkmark: { zh: '✓', ko: '✓', vi: '✓', ru: '✓' },
                 signature: { zh: '张三', ko: '김철수', vi: 'Nguyễn Văn A', ru: 'Иванов' }
             };
             
@@ -1334,7 +1368,7 @@
                                 <label>🎯 选择字段 (点击后再点击图片定位)</label>
                                 <div class="field-buttons">
                                     ${fieldsList.map(field => 
-                                        `<button onclick="state.selectedField='${field}'; render();" class="field-btn ${state.selectedField === field ? 'active' : ''}">${field}</button>`
+                                        `<button onclick="state.selectedField='${field}'; render();" class="field-btn ${state.selectedField === field ? 'active' : ''}">${field === 'checkmark' ? '✓' : field}</button>`
                                     ).join('')}
                                 </div>
                                 
@@ -1348,6 +1382,7 @@
                                         '✅ 多实例模式已开启：点击图片将创建新的字段实例（name → name_2 → name_3...）' : 
                                         '📝 普通模式：点击图片将更新已选字段的位置'}
                                 </p>
+                                <p class="hint-text" style="color: #10b981;">💡 月份/日期/对号字段会自动填充当前值，无需用户输入</p>
                             </div>
 
                             ${state.templates[state.currentTemplate][state.currentLang] ? `
@@ -1447,7 +1482,8 @@
 
         function renderUserMode() {
             const t = translations[state.language];
-            const fields = getFieldsList(state.language).filter(f => f !== 'signature');
+            // 过滤掉自动生成的字段（month, day, checkmark, signature）
+            const fields = getFieldsList(state.language).filter(f => !['signature', 'month', 'day', 'checkmark'].includes(f));
             
             return `
                 <div class="container">
@@ -1485,8 +1521,15 @@
                                 <div class="form-group">
                                     <label>${t.phone}</label>
                                     <input type="text" value="${state.formData[field] || ''}" 
-                                        oninput="state.formData['${field}'] = formatPhoneNumber(this.value); this.value = state.formData['${field}']"
-                                        placeholder="010-1234-5678">
+                                        oninput="state.formData['${field}'] = formatPhoneNumber(this.value); this.value = state.formData['${field}']">
+                                </div>
+                            `;
+                        } else if (field === 'residentNum') {
+                            return `
+                                <div class="form-group">
+                                    <label>${t.residentNum}</label>
+                                    <input type="text" value="${state.formData[field] || ''}" 
+                                        oninput="state.formData['${field}'] = formatResidentNum(this.value); this.value = state.formData['${field}']">
                                 </div>
                             `;
                         } else if (field === 'experience') {
@@ -1496,7 +1539,6 @@
                                     <div style="position: relative;">
                                         <input type="text" value="${state.formData[field] || ''}" 
                                             oninput="state.formData['${field}'] = formatExperience(this.value); this.value = state.formData['${field}']"
-                                            placeholder="3"
                                             style="padding-right: 50px;">
                                         <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 14px; pointer-events: none;">${t.experienceYears}</span>
                                     </div>
@@ -1537,7 +1579,7 @@
                         <button onclick="clearSignature(); render();" class="clear-btn">${t.clearSignature}</button>
                     </div>
                     <button onclick="generateForms()" class="generate-btn">📥 ${t.generate}</button>
-                    <p class="note">点击生成后将下载2张填好的表单图片</p>
+                    <p class="note">点击生成后将下载2张填好的表单图片（自动添加当前日期）</p>
                     <button onclick="toggleMode()" class="toggle-btn" style="width:100%; margin-top:15px">${t.adminMode}</button>
                 </div>
             `;
