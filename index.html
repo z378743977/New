@@ -1,1890 +1,733 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多语言表单填写应用</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        html, body {
-            min-height: 100vh;
-            position: relative;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
-            /* 青花瓷渐变背景：从瓷白到淡青 */
-            background: linear-gradient(135deg, #F5F5F0 0%, #D4E4E7 50%, #B8D4D6 100%);
-            min-height: 100vh;
-            padding: 20px;
-            position: relative;
-            overflow-x: hidden;
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(74, 144, 164, 0.05) 0%, transparent 70%);
-            animation: rotate 30s linear infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
-        
-        @keyframes rotate {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-        
-        #app {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            /* 瓷白色 */
-            background: #FAFAF8;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(46, 79, 122, 0.15);
-            padding: 30px;
-            border: 1px solid rgba(62, 95, 138, 0.1);
-        }
-        
-        .admin-container {
-            max-width: 1400px;
-        }
-        
-        h1 {
-            text-align: center;
-            /* 深青花蓝 */
-            color: #2E4F7A;
-            font-size: 24px;
-            margin-bottom: 30px;
-            font-weight: bold;
-        }
-        
-        .admin-title {
-            /* 皇家青花蓝 */
-            color: #1E3A5F;
-            font-size: 28px;
-        }
-        
-        label {
-            display: block;
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: #2C3E50;
-            transition: all 0.3s ease;
-        }
-        
-        .form-group:hover label {
-            color: #3E5F8A;
-            transform: translateX(3px);
-        }
-        
-        input[type="text"],
-        input[type="date"],
-        input[type="number"],
-        select {
-            width: 100%;
-            padding: 10px 15px;
-            border: 2px solid #D4E4E7;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s;
-            background: white;
-        }
-        
-        input[type="text"]:focus,
-        input[type="date"]:focus,
-        input[type="number"]:focus,
-        select:focus {
-            outline: none;
-            /* 青花蓝边框 */
-            border-color: #3E5F8A;
-            box-shadow: 0 0 0 3px rgba(62, 95, 138, 0.1);
-            transform: translateY(-2px);
-            background: #FEFEFE;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .language-buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-        
-        .lang-btn {
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            background: #E8F0F2;
-            color: #2C3E50;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 1px solid rgba(62, 95, 138, 0.2);
-        }
-        
-        .lang-btn:hover {
-            background: #D4E4E7;
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 4px 12px rgba(62, 95, 138, 0.15);
-        }
-        
-        .lang-btn.active {
-            /* 青花蓝 */
-            background: #3E5F8A;
-            color: white;
-            box-shadow: 0 4px 12px rgba(62, 95, 138, 0.4);
-            animation: activePulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes activePulse {
-            0%, 100% { 
-                box-shadow: 0 4px 12px rgba(62, 95, 138, 0.4);
-            }
-            50% { 
-                box-shadow: 0 6px 20px rgba(62, 95, 138, 0.6);
-            }
-        }
-        
-        .signature-container {
-            border: 2px solid #B8D4D6;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-top: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .signature-container:hover {
-            border-color: #4A90A4;
-            box-shadow: 0 4px 16px rgba(74, 144, 164, 0.2);
-            transform: scale(1.01);
-        }
-        
-        canvas {
-            display: block;
-            width: 100%;
-            background: white;
-            cursor: crosshair;
-            touch-action: none;
-        }
-        
-        .clear-btn {
-            margin-top: 10px;
-            background: none;
-            border: none;
-            color: #C73E1D;
-            font-size: 14px;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        
-        .clear-btn:hover {
-            color: #A32E15;
-        }
-        
-        .generate-btn {
-            width: 100%;
-            padding: 15px;
-            /* 青花蓝渐变 */
-            background: linear-gradient(135deg, #3E5F8A 0%, #2E4F7A 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 30px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            box-shadow: 0 4px 12px rgba(62, 95, 138, 0.2);
-        }
-        
-        .generate-btn:hover {
-            background: linear-gradient(135deg, #2E4F7A 0%, #1E3A5F 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(62, 95, 138, 0.3);
-        }
-        
-        .note {
-            text-align: center;
-            font-size: 12px;
-            color: #5A7A8F;
-            margin-top: 20px;
-        }
-        
-        /* Admin Mode Styles */
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        
-        .toggle-btn {
-            padding: 10px 20px;
-            background: #5A7A8F;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-        
-        .toggle-btn:hover {
-            background: #2E4F7A;
-        }
-        
-        .admin-layout {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-        }
-        
-        .left-panel {
-            background: #FAFAF8;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(62, 95, 138, 0.1);
-            border: 1px solid rgba(62, 95, 138, 0.1);
-        }
-        
-        .right-panel {
-            background: #FAFAF8;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(62, 95, 138, 0.1);
-            max-height: 800px;
-            overflow-y: auto;
-            border: 1px solid rgba(62, 95, 138, 0.1);
-        }
-        
-        .section-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2E4F7A;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #B8D4D6;
-            position: relative;
-        }
-        
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: #4A90A4;
-            transition: width 0.5s ease;
-        }
-        
-        .section-title:hover::after {
-            width: 100%;
-        }
-        
-        .template-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .tab-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            background: #E8F0F2;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(62, 95, 138, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .tab-btn:hover {
-            background: #D4E4E7;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(62, 95, 138, 0.15);
-        }
-        
-        .tab-btn.active {
-            background: #3E5F8A;
-            color: white;
-            box-shadow: 0 4px 12px rgba(62, 95, 138, 0.3);
-        }
-        
-        .tab-btn.active::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shine 2s infinite;
-        }
-        
-        @keyframes shine {
-            0% {
-                left: -100%;
-            }
-            100% {
-                left: 100%;
-            }
-        }
-        
-        .language-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .lang-tab {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            background: #E8F0F2;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            border: 1px solid rgba(62, 95, 138, 0.2);
-        }
-        
-        .lang-tab:hover {
-            background: #D4E4E7;
-            transform: scale(1.05);
-        }
-        
-        .lang-tab.active {
-            /* 清新的青绿色 */
-            background: #4A90A4;
-            color: white;
-            box-shadow: 0 4px 12px rgba(74, 144, 164, 0.4);
-            transform: scale(1.05);
-        }
-        
-        .field-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .field-btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 6px;
-            background: #E8F0F2;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(62, 95, 138, 0.2);
-        }
-        
-        .field-btn:hover {
-            background: #D4E4E7;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(62, 95, 138, 0.15);
-        }
-        
-        .field-btn.active {
-            background: #4A90A4;
-            color: white;
-            box-shadow: 0 2px 6px rgba(74, 144, 164, 0.2);
-            animation: ripple 0.6s ease-out;
-        }
-        
-        @keyframes ripple {
-            0% {
-                box-shadow: 0 0 0 0 rgba(74, 144, 164, 0.7);
-            }
-            100% {
-                box-shadow: 0 0 0 20px rgba(74, 144, 164, 0);
-            }
-        }
-        
-        .preview-box {
-            border: 2px solid #A8DADC;
-            background: #F0F8F9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-        
-        .preview-box:hover {
-            box-shadow: 0 8px 24px rgba(74, 144, 164, 0.15);
-        }
-        
-        .image-wrapper {
-            position: relative;
-            display: inline-block;
-            max-width: 100%;
-        }
-        
-        .preview-box img {
-            max-width: 100%;
-            cursor: crosshair;
-            border: 2px dashed #A8DADC;
-            display: block;
-        }
-        
-        #markersContainer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        
-        .field-marker {
-            position: absolute;
-            width: 28px;
-            height: 28px;
-            background: rgba(74, 144, 164, 0.9);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            transform: translate(-50%, -150%);
-            box-shadow: 0 2px 8px rgba(62, 95, 138, 0.3);
-            border: 3px solid white;
-            z-index: 10;
-            animation: markerBounce 2s ease-in-out infinite;
-        }
-        
-        @keyframes markerBounce {
-            0%, 100% {
-                transform: translate(-50%, -150%) scale(1);
-            }
-            50% {
-                transform: translate(-50%, -160%) scale(1.1);
-            }
-        }
-        
-        .field-label {
-            position: absolute;
-            background: rgba(74, 144, 164, 0.95);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            transform: translate(-50%, -250%);
-            white-space: nowrap;
-            z-index: 10;
-        }
-        
-        .field-preview-text {
-            position: absolute;
-            pointer-events: none;
-            z-index: 8;
-            white-space: nowrap;
-            animation: textGlow 2s ease-in-out infinite;
-        }
-        
-        @keyframes textGlow {
-            0%, 100% {
-                opacity: 0.7;
-            }
-            50% {
-                opacity: 1;
-            }
-        }
-        
-        .field-list {
-            margin-top: 20px;
-        }
-        
-        .field-item {
-            background: #F5F8F9;
-            border: 1px solid #D4E4E7;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .field-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(62, 95, 138, 0.1);
-            border-color: #A8DADC;
-        }
-        
-        .field-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .field-name {
-            font-weight: 600;
-            color: #2E4F7A;
-        }
-        
-        .field-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .edit-btn, .delete-btn {
-            padding: 4px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .edit-btn::before,
-        .delete-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        .edit-btn:hover::before,
-        .delete-btn:hover::before {
-            width: 200px;
-            height: 200px;
-        }
-        
-        .edit-btn {
-            background: #3E5F8A;
-            color: white;
-        }
-        
-        .edit-btn:hover {
-            background: #2E4F7A;
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(62, 95, 138, 0.3);
-        }
-        
-        .reposition-btn {
-            padding: 4px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            background: #F7B500;
-            color: white;
-            transition: all 0.3s;
-        }
-        
-        .reposition-btn.active {
-            background: #C73E1D;
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
-        
-        .delete-btn {
-            background: #C73E1D;
-            color: white;
-        }
-        
-        .delete-btn:hover {
-            background: #A32E15;
-            transform: scale(1.05);
-            box-shadow: 0 4px 8px rgba(199, 62, 29, 0.3);
-        }
-        
-        .field-params {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 12px;
-            color: #5A7A8F;
-        }
-        
-        .param-editor {
-            background: white;
-            border: 2px solid #3E5F8A;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 10px;
-        }
-        
-        .param-row {
-            display: grid;
-            grid-template-columns: 100px 1fr;
-            gap: 10px;
-            margin-bottom: 12px;
-            align-items: center;
-        }
-        
-        .param-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #2C3E50;
-        }
-        
-        .save-param-btn {
-            width: 100%;
-            padding: 8px;
-            background: #4A90A4;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .save-param-btn:hover {
-            background: #3E7A8D;
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .action-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .action-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.4);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-        
-        .action-btn:hover::after {
-            width: 300px;
-            height: 300px;
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 16px rgba(62, 95, 138, 0.2);
-        }
-        
-        .action-btn:active {
-            transform: translateY(-1px);
-        }
-        
-        .export-btn {
-            background: #4A90A4;
-            color: white;
-        }
-        
-        .export-btn:hover {
-            background: #3E7A8D;
-        }
-        
-        .import-label {
-            background: #3E5F8A;
-            color: white;
-        }
-        
-        .import-label:hover {
-            background: #2E4F7A;
-        }
-        
-        .upload-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #F5F8F9;
-            border-radius: 8px;
-            border: 1px solid #D4E4E7;
-            transition: all 0.3s ease;
-        }
-        
-        .upload-section:hover {
-            border-color: #A8DADC;
-            background: #F0F8F9;
-            box-shadow: 0 4px 12px rgba(74, 144, 164, 0.1);
-            transform: scale(1.01);
-        }
-        
-        /* Password Page */
-        .password-container {
-            max-width: 400px;
-            text-align: center;
-        }
-        
-        .password-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-        
-        .password-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2E4F7A;
-            margin-bottom: 10px;
-        }
-        
-        .password-subtitle {
-            color: #5A7A8F;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-        
-        .password-input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #D4E4E7;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            text-align: center;
-            letter-spacing: 2px;
-            background: white;
-        }
-        
-        .password-input:focus {
-            border-color: #3E5F8A;
-            outline: none;
-        }
-        
-        .password-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #3E5F8A 0%, #2E4F7A 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .password-btn:hover {
-            background: linear-gradient(135deg, #2E4F7A 0%, #1E3A5F 100%);
-        }
-        
-        .password-error {
-            color: #C73E1D;
-            font-size: 14px;
-            margin-top: 10px;
-            display: none;
-        }
-        
-        .password-error.show {
-            display: block;
-        }
-        
-        .back-btn {
-            margin-top: 20px;
-            background: none;
-            border: none;
-            color: #5A7A8F;
-            cursor: pointer;
-            font-size: 14px;
-            text-decoration: underline;
-        }
-        
-        .back-btn:hover {
-            color: #2E4F7A;
-        }
-        
-        .hint-text {
-            font-size: 12px;
-            color: #5A7A8F;
-            margin-top: 10px;
-        }
-        
-        .mode-switch {
-            margin-top: 15px;
-            padding: 12px;
-            background: #F0F8F9;
-            border: 2px solid #A8DADC;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-        }
-        
-        .mode-switch:hover {
-            border-color: #4A90A4;
-            box-shadow: 0 4px 12px rgba(74, 144, 164, 0.15);
-            transform: translateY(-2px);
-        }
-        
-        .mode-switch input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-        
-        .mode-switch label {
-            margin: 0;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            color: #2E4F7A;
-        }
-        
-        /* 通用的点击水波纹效果 */
-        button, .lang-btn, .tab-btn, .field-btn {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        button:active::after,
-        .lang-btn:active::after,
-        .tab-btn:active::after,
-        .field-btn:active::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.6);
-            transform: translate(-50%, -50%);
-            animation: rippleEffect 0.6s ease-out;
-        }
-        
-        @keyframes rippleEffect {
-            to {
-                width: 200px;
-                height: 200px;
-                opacity: 0;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>多语言表单填写应用（移动端下载兼容版）</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { min-height:100vh; position:relative; }
+    body {
+      font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei',sans-serif;
+      background: linear-gradient(135deg, #F5F5F0 0%, #D4E4E7 50%, #B8D4D6 100%);
+      min-height:100vh; padding:20px; position:relative; overflow-x:hidden;
+    }
+    body::before {
+      content:''; position:fixed; top:-50%; right:-50%; width:200%; height:200%;
+      background: radial-gradient(circle, rgba(74,144,164,.05) 0%, transparent 70%);
+      animation: rotate 30s linear infinite; pointer-events:none; z-index:0;
+    }
+    @keyframes rotate { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+    #app { position:relative; z-index:1; }
+    .container {
+      max-width:500px; margin:0 auto; background:#FAFAF8; border-radius:12px;
+      box-shadow:0 10px 40px rgba(46,79,122,.15); padding:30px;
+      border:1px solid rgba(62,95,138,.1);
+    }
+    .admin-container { max-width:1400px; }
+    h1 { text-align:center; color:#2E4F7A; font-size:24px; margin-bottom:30px; font-weight:bold; }
+    .admin-title { color:#1E3A5F; font-size:28px; }
+    label { display:block; font-weight:600; font-size:14px; margin-bottom:8px; color:#2C3E50; transition:all .3s; }
+    .form-group:hover label { color:#3E5F8A; transform:translateX(3px); }
+    input[type='text'], input[type='date'], input[type='number'], select {
+      width:100%; padding:10px 15px; border:2px solid #D4E4E7; border-radius:8px; font-size:14px; transition:all .3s; background:#fff;
+    }
+    input:focus, select:focus {
+      outline:none; border-color:#3E5F8A; box-shadow:0 0 0 3px rgba(62,95,138,.1); transform:translateY(-2px); background:#FEFEFE;
+    }
+    .form-group{ margin-bottom:20px; }
+    .language-buttons{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:30px; }
+    .lang-btn, .tab-btn, .field-btn, .toggle-btn, .action-btn {
+      padding:10px; border:none; border-radius:8px; background:#E8F0F2; color:#2C3E50; font-weight:500; cursor:pointer;
+      transition:all .3s; border:1px solid rgba(62,95,138,.2);
+    }
+    .lang-btn:hover, .tab-btn:hover, .field-btn:hover, .toggle-btn:hover, .action-btn:hover { background:#D4E4E7; transform:translateY(-2px); box-shadow:0 4px 12px rgba(62,95,138,.15); }
+    .lang-btn.active, .tab-btn.active { background:#3E5F8A; color:#fff; }
+    .signature-container{ border:2px solid #B8D4D6; border-radius:8px; overflow:hidden; margin-top:10px; transition:all .3s; }
+    .signature-container:hover{ border-color:#4A90A4; box-shadow:0 4px 16px rgba(74,144,164,.2); transform:scale(1.01); }
+    canvas{ display:block; width:100%; background:#fff; cursor:crosshair; touch-action:none; }
+    .clear-btn{ margin-top:10px; background:none; border:none; color:#C73E1D; font-size:14px; cursor:pointer; text-decoration:underline; }
+    .clear-btn:hover{ color:#A32E15; }
+    .generate-btn{
+      width:100%; padding:15px; background:linear-gradient(135deg,#3E5F8A 0%, #2E4F7A 100%); color:#fff; border:none; border-radius:8px;
+      font-size:16px; font-weight:600; cursor:pointer; margin-top:30px; transition:all .3s; display:flex; align-items:center; justify-content:center; gap:10px;
+      box-shadow:0 4px 12px rgba(62,95,138,.2);
+    }
+    .generate-btn:hover{ background:linear-gradient(135deg,#2E4F7A 0%,#1E3A5F 100%); transform:translateY(-2px); box-shadow:0 6px 16px rgba(62,95,138,.3); }
+    .note{ text-align:center; font-size:12px; color:#5A7A8F; margin-top:20px; }
+    .admin-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; }
+    .admin-layout{ display:grid; grid-template-columns:2fr 1fr; gap:30px; }
+    .left-panel,.right-panel{
+      background:#FAFAF8; padding:20px; border-radius:12px; box-shadow:0 2px 8px rgba(62,95,138,.1); border:1px solid rgba(62,95,138,.1);
+    }
+    .section-title{ font-size:18px; font-weight:700; color:#2E4F7A; margin-bottom:15px; padding-bottom:10px; border-bottom:2px solid #B8D4D6; }
+    .template-tabs,.language-tabs{ display:flex; gap:10px; margin-bottom:20px; }
+    .field-buttons{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+    .preview-box{ border:2px solid #A8DADC; background:#F0F8F9; padding:15px; border-radius:8px; margin-bottom:20px; }
+    .image-wrapper{ position:relative; display:inline-block; max-width:100%; }
+    .preview-box img{ max-width:100%; cursor:crosshair; border:2px dashed #A8DADC; display:block; }
+    #markersContainer{ position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+    .field-marker{
+      position:absolute; width:28px; height:28px; background:rgba(74,144,164,.9); color:#fff; border-radius:50%;
+      display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; transform:translate(-50%,-150%);
+      box-shadow:0 2px 8px rgba(62,95,138,.3); border:3px solid #fff; z-index:10;
+    }
+    .field-label{ position:absolute; background:rgba(74,144,164,.95); color:#fff; padding:4px 10px; border-radius:4px; font-size:11px; font-weight:600; transform:translate(-50%,-250%); white-space:nowrap; z-index:10; }
+    .field-preview-text{ position:absolute; pointer-events:none; z-index:8; white-space:nowrap; opacity:.9; }
+    .field-list{ margin-top:20px; }
+    .field-item{ background:#F5F8F9; border:1px solid #D4E4E7; border-radius:8px; padding:12px; margin-bottom:10px; }
+    .field-item-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .field-name{ font-weight:600; color:#2E4F7A; }
+    .field-actions{ display:flex; gap:8px; }
+    .edit-btn{ padding:4px 12px; border:none; border-radius:4px; cursor:pointer; font-size:12px; background:#3E5F8A; color:#fff; }
+    .delete-btn{ padding:4px 12px; border:none; border-radius:4px; cursor:pointer; font-size:12px; background:#C73E1D; color:#fff; }
+    .reposition-btn{ padding:4px 12px; border:none; border-radius:4px; cursor:pointer; font-size:12px; background:#F7B500; color:#fff; }
+    .param-editor{ background:#fff; border:2px solid #3E5F8A; border-radius:8px; padding:15px; margin-top:10px; }
+    .param-row{ display:grid; grid-template-columns:100px 1fr; gap:10px; margin-bottom:12px; align-items:center; }
+    .param-label{ font-size:13px; font-weight:600; color:#2C3E50; }
+    .save-param-btn{ width:100%; padding:8px; background:#4A90A4; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600; }
+    .upload-section{ margin-bottom:20px; padding:15px; background:#F5F8F9; border-radius:8px; border:1px solid #D4E4E7; }
+    .mode-switch{ margin-top:15px; padding:12px; background:#F0F8F9; border:2px solid #A8DADC; border-radius:8px; display:flex; align-items:center; gap:10px; }
+    .password-container{ max-width:400px; text-align:center; }
+    .password-title{ font-size:24px; font-weight:700; color:#2E4F7A; margin-bottom:10px; }
+    .password-subtitle{ color:#5A7A8F; margin-bottom:20px; font-size:14px; }
+    .password-input{ width:100%; padding:15px; border:2px solid #D4E4E7; border-radius:8px; font-size:16px; margin-bottom:12px; text-align:center; letter-spacing:2px; background:#fff; }
+    .password-btn{ width:100%; padding:15px; background:linear-gradient(135deg,#3E5F8A 0%, #2E4F7A 100%); color:#fff; border:none; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; }
+    .password-error{ color:#C73E1D; font-size:14px; margin-top:10px; display:none; }
+    .password-error.show{ display:block; }
+  </style>
 </head>
 <body>
-    <div id="app"></div>
+  <div id="app"></div>
 
-    <script>
-        const translations = {
-            zh: { title: '员工信息表单', selectLanguage: '选择语言', name: '姓名', birthday: '生日', address: '地址', addressSearch: '搜索地址', position: '职位', positionCustom: '自填', positionSelect: '选择工种', passport: '护照号', phone: '手机号', experience: '工作经历', experienceYears: '年', signature: '签名', clearSignature: '清除签名', generate: '生成表单', adminMode: '管理员模式', userMode: '用户模式', generateNote: '点击生成后将下载2张填好的表单图片(自动添加当前日期)', addressHint: '💡 在Naver地图中搜索地址,然后复制粘贴到输入框' },
-            ko: { title: '직원 정보 양식', selectLanguage: '언어 선택', name: '성명', birthday: '생년월일', address: '주소', addressSearch: '주소 검색', position: '직종', positionCustom: '직접 입력', positionSelect: '선택', residentNum: '주민등록번호', phone: '전화번호', experience: '경력', experienceYears: '년', signature: '서명', clearSignature: '서명 지우기', generate: '양식 생성', adminMode: '관리자 모드', userMode: '사용자 모드', generateNote: '생성 버튼을 클릭하면 작성된 양식 2장이 다운로드됩니다(현재 날짜 자동 추가)', addressHint: '💡 Naver 지도에서 주소를 검색한 후 입력란에 붙여넣기 하세요' },
-            vi: { title: 'Mẫu thông tin nhân viên', selectLanguage: 'Chọn ngôn ngữ', name: 'Họ và tên', birthday: 'Ngày sinh', address: 'Địa chỉ', addressSearch: 'Tìm địa chỉ', position: 'Vị trí', positionCustom: 'Tự nhập', positionSelect: 'Chọn', passport: 'Số hộ chiếu', phone: 'Số điện thoại', experience: 'Kinh nghiệm', experienceYears: 'năm', signature: 'Chữ ký', clearSignature: 'Xóa chữ ký', generate: 'Tạo mẫu', adminMode: 'Chế độ quản trị', userMode: 'Chế độ người dùng', generateNote: 'Nhấp tạo để tải xuống 2 mẫu đã điền (tự động thêm ngày hiện tại)', addressHint: '💡 Tìm kiếm địa chỉ trên bản đồ Naver, sau đó sao chép và dán vào ô nhập' },
-            ru: { title: 'Форма информации о сотруднике', selectLanguage: 'Выберите язык', name: 'ФИО', birthday: 'Дата рождения', address: 'Адрес', addressSearch: 'Поиск адреса', position: 'Должность', positionCustom: 'Ввести', positionSelect: 'Выбрать', passport: 'Номер паспорта', phone: 'Телефон', experience: 'Опыт работы', experienceYears: 'лет', signature: 'Подпись', clearSignature: 'Очистить подпись', generate: 'Создать форму', adminMode: 'Режим администратора', userMode: 'Режим пользователя', generateNote: 'После нажатия кнопки будут загружены 2 заполненные формы (с автоматическим добавлением текущей даты)', addressHint: '💡 Найдите адрес на карте Naver, затем скопируйте и вставьте в поле ввода' }
-        };
+  <script>
+    // ===================== 多语言与工种 =====================
+    const translations = {
+      zh:{ title:'员工信息表单', selectLanguage:'选择语言', name:'姓名', birthday:'生日', address:'地址', addressSearch:'搜索地址', position:'职位', positionCustom:'自填', positionSelect:'选择工种', passport:'护照号', phone:'手机号', experience:'工作经历', experienceYears:'年', signature:'签名', clearSignature:'清除签名', generate:'生成表单', adminMode:'管理员模式', userMode:'用户模式', generateNote:'点击生成后将下载2张填好的表单图片(自动添加当前日期)', addressHint:'💡 在Naver地图中搜索地址,然后复制粘贴到输入框' },
+      ko:{ title:'직원 정보 양식', selectLanguage:'언어 선택', name:'성명', birthday:'생년월일', address:'주소', addressSearch:'주소 검색', position:'직종', positionCustom:'직접 입력', positionSelect:'선택', residentNum:'주민등록번호', phone:'전화번호', experience:'경력', experienceYears:'년', signature:'서명', clearSignature:'서명 지우기', generate:'양식 생성', adminMode:'관리자 모드', userMode:'사용자 모드', generateNote:'생성 버튼을 클릭하면 작성된 양식 2장이 다운로드됩니다(현재 날짜 자동 추가)', addressHint:'💡 Naver 지도에서 주소를 검색한 후 입력란에 붙여넣기 하세요' },
+      vi:{ title:'Mẫu thông tin nhân viên', selectLanguage:'Chọn ngôn ngữ', name:'Họ và tên', birthday:'Ngày sinh', address:'Địa chỉ', addressSearch:'Tìm địa chỉ', position:'Vị trí', positionCustom:'Tự nhập', positionSelect:'Chọn', passport:'Số hộ chiếu', phone:'Số điện thoại', experience:'Kinh nghiệm', experienceYears:'năm', signature:'Chữ ký', clearSignature:'Xóa chữ ký', generate:'Tạo mẫu', adminMode:'Chế độ quản trị', userMode:'Chế độ người dùng', generateNote:'Nhấp tạo để tải xuống 2 mẫu đã điền (tự động thêm ngày hiện tại)', addressHint:'💡 Tìm kiếm địa chỉ trên bản đồ Naver, sau đó sao chép và dán vào ô nhập' },
+      ru:{ title:'Форма информации о сотруднике', selectLanguage:'Выберите язык', name:'ФИО', birthday:'Дата рождения', address:'Адрес', addressSearch:'Поиск адреса', position:'Должность', positionCustom:'Ввести', positionSelect:'Выбрать', passport:'Номер паспорта', phone:'Телефон', experience:'Опыт работы', experienceYears:'лет', signature:'Подпись', clearSignature:'Очистить подпись', generate:'Создать форму', adminMode:'Режим администратора', userMode:'Режим пользователя', generateNote:'После нажатия кнопки будут загружены 2 заполненные формы (с автоматическим добавлением текущей даты)', addressHint:'💡 Найдите адрес на карте Naver, затем скопируйте и вставьте в поле ввода' }
+    };
 
-        const positionOptions = {
-            zh: ['整理', '老炮', '拆除', '钢筋', '浇筑', '架子工', '信号员', '二炮', '钢炮', '碎石抹灰', '安全'],
-            ko: ['정리', '형틀', '해체', '철근', '타설', '비계', '신호수', '알퍼', '갱퍼', '할석미장', '안전'],
-            vi: ['정리', '형틀', '해체', '철근', '타설', '비계', '신호수', '알퍼', '갱퍼', '할석미장', '안전'],
-            ru: ['정리', '형틀', '해체', '철근', '타설', '비계', '신호수', '알퍼', '갱퍼', '할석미장', '안전']
-        };
-        
-        const positionMapping = {
-            '整理': '정리',
-            '老炮': '형틀',
-            '拆除': '해체',
-            '钢筋': '철근',
-            '浇筑': '타설',
-            '架子工': '비계',
-            '信号员': '신호수',
-            '二炮': '알퍼',
-            '钢炮': '갱퍼',
-            '碎石抹灰': '할석미장',
-            '安全': '안전'
-        };
-        
-        function convertPositionToKorean(position) {
-            return positionMapping[position] || position;
+    const positionOptions = {
+      zh:['整理','老炮','拆除','钢筋','浇筑','架子工','信号员','二炮','钢炮','碎石抹灰','安全'],
+      ko:['정리','형틀','해체','철근','타설','비계','신호수','알퍼','갱퍼','할석미장','안전'],
+      vi:['정리','형틀','해체','철근','타설','비계','신호수','알퍼','갱퍼','할석미장','안전'],
+      ru:['정리','형틀','해체','철근','타설','비계','신호수','알퍼','갱퍼','할석미장','안전']
+    };
+
+    const positionMapping = {
+      '整理':'정리','老炮':'형틀','拆除':'해체','钢筋':'철근','浇筑':'타설','架子工':'비계','信号员':'신호수','二炮':'알퍼','钢炮':'갱퍼','碎石抹灰':'할석미장','安全':'안전'
+    };
+    function convertPositionToKorean(p){ return positionMapping[p] || p; }
+
+    // ===================== 应用状态 =====================
+    let state = {
+      language:'zh',
+      formData:{},
+      signature:null,
+      isDrawing:false,
+      isAdminMode:false,
+      showPasswordPage:false,
+      templates:{ contract:{ zh:null, ko:null }, safety:{ zh:null, ko:null } },
+      fieldPositions:{ contract:{ zh:{}, ko:{} }, safety:{ zh:{}, ko:{} } },
+      currentTemplate:'contract',
+      currentLang:'zh',
+      selectedField:null,
+      editingField:null,
+      multiInstanceMode:false,
+      repositionTarget:null,
+      positionMode:'custom'
+    };
+
+    // ===================== 本地存储/默认配置 =====================
+    function loadFromLocalStorage(){
+      try{
+        const saved = localStorage.getItem('formFillerConfig');
+        if(saved){
+          const config = JSON.parse(saved);
+          if(config.templates) state.templates = config.templates;
+          if(config.fieldPositions) state.fieldPositions = config.fieldPositions;
+          return true;
         }
+      }catch(e){ console.error('加载配置失败:', e); }
+      return false;
+    }
 
-        let state = {
-            language: 'zh',
-            formData: {},
-            signature: null,
-            isDrawing: false,
-            isAdminMode: false,
-            showPasswordPage: false,
-            templates: { contract: { zh: null, ko: null }, safety: { zh: null, ko: null } },
-            fieldPositions: { contract: { zh: {}, ko: {} }, safety: { zh: {}, ko: {} } },
-            currentTemplate: 'contract',
-            currentLang: 'zh',
-            selectedField: null,
-            editingField: null,
-            multiInstanceMode: false,
-            repositionTarget: null,
-            positionMode: 'custom',
-            showMapModal: false
-        };
+    async function loadDefaultConfig(){
+      try{
+        const res = await fetch('form-config.json');
+        if(res.ok){
+          const config = await res.json();
+          if(config.templates) state.templates = config.templates;
+          if(config.fieldPositions) state.fieldPositions = config.fieldPositions;
+          return true;
+        }
+      }catch(e){ /* ignore */ }
+      return false;
+    }
 
-        function loadFromLocalStorage() {
-            try {
-                const saved = localStorage.getItem('formFillerConfig');
-                if (saved) {
-                    const config = JSON.parse(saved);
-                    if (config.templates) state.templates = config.templates;
-                    if (config.fieldPositions) state.fieldPositions = config.fieldPositions;
-                    console.log('✅ 配置已从本地加载');
-                    return true;
-                }
-            } catch (e) {
-                console.error('加载配置失败:', e);
+    function saveToLocalStorage(){
+      try{
+        const config = { templates: state.templates, fieldPositions: state.fieldPositions };
+        localStorage.setItem('formFillerConfig', JSON.stringify(config));
+      }catch(e){ console.error('保存配置失败:', e); }
+    }
+
+    async function initConfig(){
+      const hasLocal = loadFromLocalStorage();
+      if(!hasLocal){ await loadDefaultConfig(); }
+      render();
+    }
+
+    // ===================== 工具函数 =====================
+    function getFieldsList(lang){
+      if(lang==='ko'){ return ['name','birthday','address','residentNum','phone','position','experience','month','day','checkmark','signature']; }
+      return ['name','birthday','address','position','passport','phone','experience','month','day','checkmark','signature'];
+    }
+    function getCurrentMonth(){ return String(new Date().getMonth()+1); }
+    function getCurrentDay(){ return String(new Date().getDate()); }
+
+    // 👉 移动端兼容下载（核心修复点）
+    function safeDownloadFromBlob(blob, filename){
+      const url = URL.createObjectURL(blob);
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if(isMobile){
+        // 移动端打开新标签页，用户长按保存
+        window.open(url, '_blank');
+        // 可选提示
+        setTimeout(()=>{ try{ alert('📱 已在新标签打开图片，请长按保存'); }catch(e){} }, 150);
+      }else{
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    }
+
+    // ===================== 签名板 =====================
+    let signatureCanvas=null, sigCtx=null;
+    function startDrawing(e){
+      const rect = signatureCanvas.getBoundingClientRect();
+      const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+      const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+      sigCtx.beginPath(); sigCtx.moveTo(x,y); state.isDrawing=true;
+    }
+    function draw(e){
+      if(!state.isDrawing) return;
+      e.preventDefault();
+      const rect = signatureCanvas.getBoundingClientRect();
+      const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+      const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+      sigCtx.lineTo(x,y); sigCtx.stroke();
+    }
+    function stopDrawing(){
+      if(state.isDrawing){ state.isDrawing=false; state.signature = signatureCanvas.toDataURL(); }
+    }
+    function clearSignature(){ sigCtx.clearRect(0,0,signatureCanvas.width, signatureCanvas.height); state.signature=null; }
+
+    // ===================== 生成表单 =====================
+    async function generateForms(){
+      if(!state.signature){
+        const messages = { zh:'请先签名', ko:'서명을 해주세요', vi:'Vui lòng ký tên', ru:'Пожалуйста, подпишите' };
+        alert(messages[state.language] || '请先签名');
+        return;
+      }
+      const langKey = state.language === 'ko' ? 'ko' : 'zh';
+      for(const templateType of ['contract','safety']){ await generateForm(templateType, langKey); }
+    }
+
+    async function generateForm(templateType, langKey){
+      const template = state.templates[templateType][langKey];
+      const positions = state.fieldPositions[templateType][langKey];
+      if(!template || !positions || Object.keys(positions).length===0){ return; }
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      await new Promise((resolve)=>{
+        img.onload = ()=>{
+          canvas.width = img.width; canvas.height = img.height;
+          ctx.drawImage(img,0,0); ctx.textBaseline='top';
+
+          // 写入文本
+          Object.keys(positions).forEach(key=>{
+            const pos = positions[key]; if(!pos) return;
+            const baseField = pos.baseField || key;
+            let textValue = '';
+            if(baseField==='month'){ textValue=getCurrentMonth(); }
+            else if(baseField==='day'){ textValue=getCurrentDay(); }
+            else if(baseField==='checkmark'){ textValue='✓'; }
+            else if(state.formData[baseField]){
+              textValue = state.formData[baseField];
+              if(baseField==='experience' && textValue){ textValue = textValue + (langKey==='ko'?'년':'年'); }
+              else if(baseField==='position' && textValue){ textValue = convertPositionToKorean(textValue); }
             }
-            return false;
-        }
-        
-        async function loadDefaultConfig() {
-            try {
-                const response = await fetch('form-config.json');
-                if (response.ok) {
-                    const config = await response.json();
-                    if (config.templates) state.templates = config.templates;
-                    if (config.fieldPositions) state.fieldPositions = config.fieldPositions;
-                    console.log('✅ 默认配置已加载');
-                    return true;
-                }
-            } catch (e) {
-                console.log('ℹ️ 未找到默认配置文件');
+            if(textValue){
+              ctx.font = `${pos.fontSize || 44}px Arial`;
+              ctx.fillStyle = pos.color || '#000';
+              ctx.fillText(textValue, pos.x, pos.y);
             }
-            return false;
-        }
+          });
 
-        function saveToLocalStorage() {
-            try {
-                const config = {
-                    templates: state.templates,
-                    fieldPositions: state.fieldPositions
-                };
-                localStorage.setItem('formFillerConfig', JSON.stringify(config));
-                console.log('✅ 配置已自动保存');
-            } catch (e) {
-                console.error('保存配置失败:', e);
+          // 贴签名
+          Object.keys(positions).forEach(key=>{
+            const pos = positions[key]; if(!pos) return;
+            const baseField = pos.baseField || key;
+            if(baseField==='signature' && state.signature){
+              const sigImg = new Image();
+              sigImg.onload = ()=>{
+                const w = pos.width || 150, h = pos.height || 50;
+                ctx.drawImage(sigImg, pos.x, pos.y, w, h);
+              };
+              sigImg.src = state.signature;
             }
-        }
+          });
 
-        async function initConfig() {
-            const hasLocal = loadFromLocalStorage();
-            if (!hasLocal) {
-                await loadDefaultConfig();
-            }
-            render();
-        }
-        
-        initConfig();
-
-        let signatureCanvas = null;
-        let ctx = null;
-
-        function getFieldsList(lang) {
-            if (lang === 'ko') {
-                return ['name', 'birthday', 'address', 'residentNum', 'phone', 'position', 'experience', 'month', 'day', 'checkmark', 'signature'];
-            }
-            return ['name', 'birthday', 'address', 'position', 'passport', 'phone', 'experience', 'month', 'day', 'checkmark', 'signature'];
-        }
-        
-        function getCurrentMonth() {
-            const now = new Date();
-            return String(now.getMonth() + 1);
-        }
-        
-        function getCurrentDay() {
-            const now = new Date();
-            return String(now.getDate());
-        }
-
-        function startDrawing(e) {
-            const rect = signatureCanvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-            const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            state.isDrawing = true;
-        }
-
-        function draw(e) {
-            if (!state.isDrawing) return;
-            e.preventDefault();
-            const rect = signatureCanvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
-            const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
-            ctx.lineTo(x, y);
-            ctx.stroke();
-        }
-
-        function stopDrawing() {
-            if (state.isDrawing) {
-                state.isDrawing = false;
-                state.signature = signatureCanvas.toDataURL();
-            }
-        }
-
-        function clearSignature() {
-            ctx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
-            state.signature = null;
-        }
-
-        async function generateForms() {
-            if (!state.signature) {
-                const messages = { zh: '请先签名', ko: '서명을 해주세요', vi: 'Vui lòng ký tên', ru: 'Пожалуйста, подпишите' };
-                alert(messages[state.language]);
-                return;
-            }
-
-            const langKey = state.language === 'ko' ? 'ko' : 'zh';
-            for (const templateType of ['contract', 'safety']) {
-                await generateForm(templateType, langKey);
-            }
-        }
-
-        async function generateForm(templateType, langKey) {
-            const template = state.templates[templateType][langKey];
-            const positions = state.fieldPositions[templateType][langKey];
-            
-            if (!template || !positions || Object.keys(positions).length === 0) {
-                return;
-            }
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-            
-            await new Promise((resolve) => {
-                img.onload = () => {
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    ctx.textBaseline = 'top';
-
-                    Object.keys(positions).forEach(fieldKey => {
-                        const pos = positions[fieldKey];
-                        const baseField = pos.baseField || fieldKey;
-                        
-                        let textValue = '';
-                        
-                        if (baseField === 'month') {
-                            textValue = getCurrentMonth();
-                        } else if (baseField === 'day') {
-                            textValue = getCurrentDay();
-                        } else if (baseField === 'checkmark') {
-                            textValue = '✓';
-                        } else if (pos && state.formData[baseField]) {
-                            textValue = state.formData[baseField];
-                            
-                            if (baseField === 'experience' && textValue) {
-                                textValue = getFormattedExperience(textValue, langKey);
-                            }
-                            else if (baseField === 'position' && textValue) {
-                                textValue = convertPositionToKorean(textValue);
-                            }
-                        }
-                        
-                        if (textValue && pos) {
-                            ctx.font = `${pos.fontSize || 44}px Arial`;
-                            ctx.fillStyle = pos.color || '#000000';
-                            ctx.fillText(textValue, pos.x, pos.y);
-                        }
-                    });
-
-                    Object.keys(positions).forEach(fieldKey => {
-                        const pos = positions[fieldKey];
-                        const baseField = pos.baseField || fieldKey;
-                        
-                        if (baseField === 'signature' && pos && state.signature) {
-                            const sigImg = new Image();
-                            sigImg.onload = () => {
-                                const width = pos.width || 150;
-                                const height = pos.height || 50;
-                                ctx.drawImage(sigImg, pos.x, pos.y, width, height);
-                            };
-                            sigImg.src = state.signature;
-                        }
-                    });
-
-                    setTimeout(() => {
-                        canvas.toBlob(blob => {
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `${templateType === 'contract' ? '劳动合同' : '安全协议'}_${langKey}.png`;
-                            a.click();
-                            URL.revokeObjectURL(url);
-                            resolve();
-                        });
-                    }, 100);
-                };
-                img.src = template;
+          // 导出（移动端兼容）
+          setTimeout(()=>{
+            canvas.toBlob(blob=>{
+              const filename = `${templateType==='contract'?'劳动合同':'安全协议'}_${langKey}.png`;
+              safeDownloadFromBlob(blob, filename);
+              resolve();
             });
-        }
+          }, 120);
+        };
+        img.src = template;
+      });
+    }
 
-        function handleTemplateUpload(e, templateType, langKey) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    state.templates[templateType][langKey] = event.target.result;
-                    saveToLocalStorage();
-                    render();
-                    setTimeout(renderFieldMarkers, 100);
-                };
-                reader.readAsDataURL(file);
-            }
-        }
+    // ===================== 上传/定位 =====================
+    function handleTemplateUpload(e, templateType, langKey){
+      const file = e.target.files[0];
+      if(file){
+        const reader = new FileReader();
+        reader.onload = (ev)=>{
+          state.templates[templateType][langKey] = ev.target.result;
+          saveToLocalStorage(); render(); setTimeout(renderFieldMarkers, 100);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
 
-        function handleImageClick(e) {
-            const img = e.target;
-            const rect = img.getBoundingClientRect();
-            const scaleX = img.naturalWidth / rect.width;
-            const scaleY = img.naturalHeight / rect.height;
-            const x = (e.clientX - rect.left) * scaleX;
-            const y = (e.clientY - rect.top) * scaleY;
-            
-            const positions = state.fieldPositions[state.currentTemplate][state.currentLang];
-            
-            let fieldKey;
-            
-            if (state.repositionTarget) {
-                fieldKey = state.repositionTarget;
-                state.repositionTarget = null;
-            }
-            else if (state.selectedField) {
-                fieldKey = state.selectedField;
-                
-                if (state.multiInstanceMode && positions[fieldKey]) {
-                    let instanceNum = 2;
-                    while (positions[`${state.selectedField}_${instanceNum}`]) {
-                        instanceNum++;
-                    }
-                    fieldKey = `${state.selectedField}_${instanceNum}`;
-                }
-            } else {
-                return;
-            }
-            
-            positions[fieldKey] = {
-                x: Math.round(x),
-                y: Math.round(y),
-                fontSize: positions[fieldKey]?.fontSize || 44,
-                color: positions[fieldKey]?.color || '#000000',
-                baseField: positions[fieldKey]?.baseField || state.selectedField || fieldKey.replace(/_\d+$/, ''),
-                width: (positions[fieldKey]?.baseField === 'signature' || state.selectedField === 'signature') ? (positions[fieldKey]?.width || 150) : undefined,
-                height: (positions[fieldKey]?.baseField === 'signature' || state.selectedField === 'signature') ? (positions[fieldKey]?.height || 50) : undefined
-            };
-            
-            saveToLocalStorage();
-            render();
-            setTimeout(renderFieldMarkers, 50);
+    function handleImageClick(e){
+      const img = e.target;
+      const rect = img.getBoundingClientRect();
+      const scaleX = img.naturalWidth / rect.width;
+      const scaleY = img.naturalHeight / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      const positions = state.fieldPositions[state.currentTemplate][state.currentLang];
+      let fieldKey;
+
+      if(state.repositionTarget){ fieldKey = state.repositionTarget; state.repositionTarget=null; }
+      else if(state.selectedField){
+        fieldKey = state.selectedField;
+        if(state.multiInstanceMode && positions[fieldKey]){
+          let i=2; while(positions[`${state.selectedField}_${i}`]) i++;
+          fieldKey = `${state.selectedField}_${i}`;
         }
-        
-        function repositionField(fieldKey) {
-            state.repositionTarget = fieldKey;
-            state.selectedField = null;
-            render();
+      } else { return; }
+
+      positions[fieldKey] = {
+        x:Math.round(x), y:Math.round(y),
+        fontSize: positions[fieldKey]?.fontSize || 44,
+        color: positions[fieldKey]?.color || '#000000',
+        baseField: positions[fieldKey]?.baseField || state.selectedField || fieldKey.replace(/_\\d+$/, ''),
+        width: (positions[fieldKey]?.baseField==='signature' || state.selectedField==='signature') ? (positions[fieldKey]?.width || 150) : undefined,
+        height:(positions[fieldKey]?.baseField==='signature' || state.selectedField==='signature') ? (positions[fieldKey]?.height|| 50) : undefined
+      };
+      saveToLocalStorage(); render(); setTimeout(renderFieldMarkers, 50);
+    }
+
+    function repositionField(key){ state.repositionTarget=key; state.selectedField=null; render(); }
+    function editField(name){ state.editingField=name; render(); }
+    function deleteField(name){
+      if(confirm('确定删除该字段配置吗?')){
+        delete state.fieldPositions[state.currentTemplate][state.currentLang][name];
+        saveToLocalStorage(); render(); setTimeout(renderFieldMarkers, 50);
+      }
+    }
+    function saveFieldParams(){
+      const fz = document.getElementById('editFontSize').value;
+      const color = document.getElementById('editColor').value;
+      const w = document.getElementById('editWidth')?.value;
+      const h = document.getElementById('editHeight')?.value;
+      const pos = state.fieldPositions[state.currentTemplate][state.currentLang][state.editingField];
+      pos.fontSize = parseInt(fz); pos.color = color;
+      if(w) pos.width = parseInt(w); if(h) pos.height = parseInt(h);
+      state.editingField=null; saveToLocalStorage(); render(); setTimeout(renderFieldMarkers, 50);
+    }
+
+    function downloadConfig(){
+      const conf = { templates: state.templates, fieldPositions: state.fieldPositions };
+      const blob = new Blob([JSON.stringify(conf,null,2)], {type:'application/json'});
+      safeDownloadFromBlob(blob, 'form-config.json');
+    }
+    function loadConfig(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev)=>{
+        try{
+          const conf = JSON.parse(ev.target.result);
+          state.templates = conf.templates || { contract:{ zh:null, ko:null }, safety:{ zh:null, ko:null } };
+          state.fieldPositions = conf.fieldPositions || { contract:{ zh:{}, ko:{} }, safety:{ zh:{}, ko:{} } };
+          saveToLocalStorage(); render(); setTimeout(renderFieldMarkers, 100);
+          alert('✅ 配置导入成功!');
+        }catch{ alert('❌ 配置文件格式错误'); }
+      };
+      reader.readAsText(file);
+    }
+    function clearAllData(){
+      if(confirm('⚠️ 确定要清空所有配置吗?此操作不可恢复!')){
+        localStorage.removeItem('formFillerConfig');
+        state.templates = { contract:{ zh:null, ko:null }, safety:{ zh:null, ko:null } };
+        state.fieldPositions = { contract:{ zh:{}, ko:{} }, safety:{ zh:{}, ko:{} } };
+        render(); alert('✅ 所有配置已清空');
+      }
+    }
+
+    // ===================== 模式切换 & 密码页 =====================
+    function toggleMode(){
+      if(!state.isAdminMode){ state.showPasswordPage=true; render(); }
+      else { state.isAdminMode=false; render(); }
+    }
+    function checkPassword(){
+      const pwd = document.getElementById('passwordInput').value;
+      const error = document.getElementById('errorMsg');
+      if(pwd==='admin123'){ state.showPasswordPage=false; state.isAdminMode=true; render(); }
+      else { error.classList.add('show'); setTimeout(()=>error.classList.remove('show'), 2000); }
+    }
+    function cancelPassword(){ state.showPasswordPage=false; render(); }
+    function handlePasswordKeyPress(e){ if(e.key==='Enter') checkPassword(); }
+
+    // ===================== 渲染辅助 =====================
+    function getExampleText(fieldKey, lang){
+      const base = fieldKey.replace(/_\\d+$/, '');
+      const examples = {
+        name:{ zh:'张三', ko:'김철수', vi:'Nguyễn Văn A', ru:'Иванов' },
+        birthday:{ zh:'1990-01-01', ko:'1990-01-01', vi:'1990-01-01', ru:'1990-01-01' },
+        address:{ zh:'北京市朝阳区', ko:'서울시 강남구', vi:'Hà Nội', ru:'Москва' },
+        position:{ zh:'整理', ko:'정리', vi:'정리', ru:'정리' },
+        passport:{ zh:'E12345678', ko:'M12345678', vi:'B1234567', ru:'AB1234567' },
+        phone:{ zh:'138-0013-8000', ko:'010-1234-5678', vi:'091-2345-678', ru:'+7 900 123-45-67' },
+        residentNum:{ zh:'110101-1990011234', ko:'900101-1234567', vi:'001090-0001234', ru:'123456-7890123' },
+        experience:{ zh:'3年', ko:'3년', vi:'3 năm', ru:'3 лет' },
+        month:{ zh:getCurrentMonth(), ko:getCurrentMonth(), vi:getCurrentMonth(), ru:getCurrentMonth() },
+        day:{ zh:getCurrentDay(), ko:getCurrentDay(), vi:getCurrentDay(), ru:getCurrentDay() },
+        checkmark:{ zh:'✓', ko:'✓', vi:'✓', ru:'✓' },
+        signature:{ zh:'张三', ko:'김철수', vi:'Nguyễn Văn A', ru:'Иванов' }
+      };
+      const langKey = (lang==='ko'||lang==='vi'||lang==='ru')?lang:'zh';
+      return examples[base]?.[langKey] || '示例';
+    }
+
+    function renderFieldMarkers(){
+      const img = document.getElementById('templateImage');
+      const container = document.getElementById('markersContainer');
+      if(!img || !container) return;
+      const positions = state.fieldPositions[state.currentTemplate][state.currentLang] || {};
+      container.innerHTML='';
+
+      const displayWidth = img.clientWidth, displayHeight = img.clientHeight;
+      const naturalWidth = img.naturalWidth, naturalHeight = img.naturalHeight;
+      const scaleX = displayWidth / naturalWidth, scaleY = displayHeight / naturalHeight;
+
+      let idx=1;
+      Object.keys(positions).forEach(key=>{
+        const pos = positions[key]; if(!pos || pos.x==null || pos.y==null) return;
+        const dx = pos.x * scaleX, dy = pos.y * scaleY;
+        const baseField = pos.baseField || key;
+
+        const marker = document.createElement('div'); marker.className='field-marker'; marker.textContent=idx;
+        marker.style.left = dx+'px'; marker.style.top = dy+'px';
+        const label = document.createElement('div'); label.className='field-label'; label.textContent=key; label.style.left=dx+'px'; label.style.top=dy+'px';
+        container.appendChild(marker); container.appendChild(label);
+
+        if(baseField!=='signature'){
+          const previewText = document.createElement('div');
+          previewText.className='field-preview-text';
+          previewText.textContent = getExampleText(key, state.currentLang);
+          previewText.style.left = dx+'px'; previewText.style.top = dy+'px';
+          previewText.style.fontSize = ((pos.fontSize||44) * scaleX) + 'px';
+          previewText.style.color = pos.color || '#000';
+          previewText.style.fontFamily = 'Arial';
+          container.appendChild(previewText);
+        }else{
+          const sigBox = document.createElement('div');
+          sigBox.style.position='absolute'; sigBox.style.left=dx+'px'; sigBox.style.top=dy+'px';
+          sigBox.style.width=((pos.width||150)*scaleX)+'px'; sigBox.style.height=((pos.height||50)*scaleY)+'px';
+          sigBox.style.border='2px dashed rgba(74,144,164,.6)'; sigBox.style.backgroundColor='rgba(74,144,164,.1)'; sigBox.style.zIndex='8';
+          container.appendChild(sigBox);
         }
-        
-        function formatPhoneNumber(value) {
-            const numbers = value.replace(/\D/g, '');
-            if (numbers.length <= 3) {
-                return numbers;
-            } else if (numbers.length <= 7) {
-                return numbers.slice(0, 3) + '-' + numbers.slice(3);
-            } else {
-                return numbers.slice(0, 3) + '-' + numbers.slice(3, 7) + '-' + numbers.slice(7, 11);
-            }
-        }
-        
-        function formatResidentNum(value) {
-            const numbers = value.replace(/\D/g, '');
-            if (numbers.length <= 6) {
-                return numbers;
-            } else {
-                return numbers.slice(0, 6) + '-' + numbers.slice(6, 13);
-            }
-        }
-        
-        function formatExperience(value) {
-            const numbers = value.replace(/\D/g, '');
-            return numbers;
-        }
-        
-        function getFormattedExperience(value, lang) {
-            return value ? value + '년' : '';
-        }
-        
-        function openAddressSearch() {
-            const hints = {
-                zh: {
-                    title: '🗺️ Naver 地图 - 地址搜索',
-                    close: '✕ 关闭',
-                    instruction: '🔍 使用说明：',
-                    step1: '1. 在下方Naver地图中搜索你的地址',
-                    step2: '2. 找到地址后,点击并复制完整地址',
-                    step3: '3. 返回表单,粘贴到地址输入框中',
-                    step4: '4. 点击"✕ 关闭"按钮返回表单'
-                },
-                ko: {
-                    title: '🗺️ Naver 지도 - 주소 검색',
-                    close: '✕ 닫기',
-                    instruction: '🔍 사용 방법：',
-                    step1: '1. 아래 Naver 지도에서 주소를 검색하세요',
-                    step2: '2. 주소를 찾은 후 클릭하여 전체 주소를 복사하세요',
-                    step3: '3. 양식으로 돌아가서 주소 입력란에 붙여넣기 하세요',
-                    step4: '4. "✕ 닫기" 버튼을 클릭하여 양식으로 돌아가세요'
-                },
-                vi: {
-                    title: '🗺️ Bản đồ Naver - Tìm địa chỉ',
-                    close: '✕ Đóng',
-                    instruction: '🔍 Hướng dẫn：',
-                    step1: '1. Tìm kiếm địa chỉ của bạn trong bản đồ Naver bên dưới',
-                    step2: '2. Sau khi tìm thấy, nhấp và sao chép địa chỉ đầy đủ',
-                    step3: '3. Quay lại biểu mẫu và dán vào ô địa chỉ',
-                    step4: '4. Nhấp nút "✕ Đóng" để quay lại biểu mẫu'
-                },
-                ru: {
-                    title: '🗺️ Карта Naver - Поиск адреса',
-                    close: '✕ Закрыть',
-                    instruction: '🔍 Инструкция：',
-                    step1: '1. Найдите свой адрес на карте Naver ниже',
-                    step2: '2. После нахождения нажмите и скопируйте полный адрес',
-                    step3: '3. Вернитесь к форме и вставьте в поле адреса',
-                    step4: '4. Нажмите кнопку "✕ Закрыть" чтобы вернуться к форме'
-                }
-            };
-            
-            const t = hints[state.language] || hints.zh;
-            
-            const overlay = document.createElement('div');
-            overlay.id = 'mapModalOverlay';
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.85);
-                z-index: 999999;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 20px;
-            `;
-            
-            const content = document.createElement('div');
-            content.style.cssText = `
-                background: white;
-                border-radius: 12px;
-                width: 95%;
-                max-width: 1100px;
-                height: 90vh;
-                max-height: 850px;
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-                box-shadow: 0 25px 80px rgba(0,0,0,0.6);
-            `;
-            
-            content.innerHTML = `
-                <div style="padding: 20px 25px; border-bottom: 2px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: white; flex-shrink: 0;">
-                    <h2 style="font-size: 20px; font-weight: bold; color: #1f2937; margin: 0;">${t.title}</h2>
-                    <button id="closeMapBtn" style="background: #C73E1D; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 16px;">${t.close}</button>
+        idx++;
+      });
+    }
+
+    function getFieldDisplayName(key){
+      const m = key.match(/^(.+)_([0-9]+)$/); if(m) return `${m[1]} (${m[2]})`; return key;
+    }
+
+    // ===================== UI渲染 =====================
+    function renderPasswordPage(){
+      return `
+        <div class="container password-container">
+          <h2 class="password-title">管理员验证</h2>
+          <p class="password-subtitle">请输入管理员密码以继续</p>
+          <input type="password" id="passwordInput" class="password-input" placeholder="请输入密码" onkeypress="handlePasswordKeyPress(event)" autofocus>
+          <button onclick="checkPassword()" class="password-btn">确认登录</button>
+          <p id="errorMsg" class="password-error">❌ 密码错误,请重试</p>
+          <button onclick="cancelPassword()" class="clear-btn">返回</button>
+        </div>
+      `;
+    }
+
+    function renderAdminMode(){
+      const t = translations[state.language];
+      const positions = state.fieldPositions[state.currentTemplate][state.currentLang] || {};
+      const fieldsList = getFieldsList(state.currentLang);
+      return `
+        <div class="container admin-container">
+          <div class="admin-header">
+            <h1 class="admin-title">管理员配置模式</h1>
+            <button onclick="toggleMode()" class="toggle-btn">${t.userMode}</button>
+          </div>
+
+          <div class="admin-layout">
+            <div class="left-panel">
+              <h3 class="section-title">📋 模板配置</h3>
+              <div class="template-tabs">
+                <button onclick="state.currentTemplate='contract'; render(); setTimeout(renderFieldMarkers,100);" class="tab-btn ${state.currentTemplate==='contract'?'active':''}">劳动合同</button>
+                <button onclick="state.currentTemplate='safety'; render(); setTimeout(renderFieldMarkers,100);" class="tab-btn ${state.currentTemplate==='safety'?'active':''}">安全协议</button>
+              </div>
+              <div class="language-tabs">
+                <button onclick="state.currentLang='zh'; render(); setTimeout(renderFieldMarkers,100);" class="lang-btn ${state.currentLang==='zh'?'active':''}">中文/越南语/俄语</button>
+                <button onclick="state.currentLang='ko'; render(); setTimeout(renderFieldMarkers,100);" class="lang-btn ${state.currentLang==='ko'?'active':''}">한국어</button>
+              </div>
+
+              <div class="upload-section">
+                <label>📤 上传 ${state.currentTemplate==='contract'?'劳动合同':'安全协议'} 模板 (${state.currentLang==='zh'?'中文/越南语/俄语':'한국어'})</label>
+                <input type="file" accept="image/*" onchange="handleTemplateUpload(event,'${state.currentTemplate}','${state.currentLang}')" style="margin-top:10px;">
+              </div>
+
+              <div class="form-group">
+                <label>🎯 选择字段 (点击后再点击图片定位)</label>
+                <div class="field-buttons">
+                  ${fieldsList.map(f=>`<button onclick="state.selectedField='${f}'; render();" class="field-btn ${state.selectedField===f?'active':''}">${f==='checkmark'?'✓':f}</button>`).join('')}
                 </div>
-                <div style="flex: 1; padding: 20px; overflow: hidden; display: flex; flex-direction: column; gap: 15px; background: #f9fafb;">
-                    <div style="background: #F0F8F9; border: 2px solid #A8DADC; padding: 15px; border-radius: 8px; font-size: 14px; color: #2E4F7A; flex-shrink: 0;">
-                        <strong>${t.instruction}</strong><br>
-                        ${t.step1}<br>
-                        ${t.step2}<br>
-                        ${t.step3}<br>
-                        ${t.step4}
-                    </div>
-                    <iframe src="https://map.naver.com/" style="width: 100%; flex: 1; border: 2px solid #e5e7eb; border-radius: 8px; background: white;"></iframe>
+                <div class="mode-switch">
+                  <input type="checkbox" id="multiInstanceMode" ${state.multiInstanceMode?'checked':''} onchange="state.multiInstanceMode=this.checked; render();">
+                  <label for="multiInstanceMode">🔄 多实例模式(同一字段创建多个位置)</label>
                 </div>
-            `;
-            
-            overlay.appendChild(content);
-            
-            overlay.addEventListener('click', function(e) {
-                if (e.target === overlay) {
-                    closeMapModalDirect();
-                }
-            });
-            
-            content.querySelector('#closeMapBtn').addEventListener('click', closeMapModalDirect);
-            
-            document.body.style.overflow = 'hidden';
-            
-            document.body.appendChild(overlay);
-        }
-        
-        function closeMapModalDirect() {
-            const overlay = document.getElementById('mapModalOverlay');
-            if (overlay) {
-                overlay.remove();
-            }
-            document.body.style.overflow = '';
-        }
-        
-        function closeMapModal() {
-            closeMapModalDirect();
-        }
+                <p class="note">${state.multiInstanceMode?'✅ 多实例模式: 点击图片会创建 name_2 / name_3...':'🔍 普通模式: 点击图片更新所选字段坐标'}</p>
+                <p class="note" style="color:#4A90A4;">💡 月份/日期/对号会自动填充当前值</p>
+              </div>
 
-        function editField(fieldName) {
-            state.editingField = fieldName;
-            render();
-        }
-
-        function deleteField(fieldName) {
-            if (confirm(`确定删除 ${getFieldDisplayName(fieldName)} 的配置吗?`)) {
-                delete state.fieldPositions[state.currentTemplate][state.currentLang][fieldName];
-                saveToLocalStorage();
-                render();
-                setTimeout(renderFieldMarkers, 50);
-            }
-        }
-
-        function saveFieldParams() {
-            const fontSize = document.getElementById('editFontSize').value;
-            const color = document.getElementById('editColor').value;
-            const width = document.getElementById('editWidth')?.value;
-            const height = document.getElementById('editHeight')?.value;
-            
-            const pos = state.fieldPositions[state.currentTemplate][state.currentLang][state.editingField];
-            pos.fontSize = parseInt(fontSize);
-            pos.color = color;
-            if (width) pos.width = parseInt(width);
-            if (height) pos.height = parseInt(height);
-            
-            state.editingField = null;
-            saveToLocalStorage();
-            render();
-            setTimeout(renderFieldMarkers, 50);
-        }
-        
-        function getExampleText(fieldKey, lang) {
-            const baseField = fieldKey.replace(/_\d+$/, '');
-            
-            const examples = {
-                name: { zh: '张三', ko: '김철수', vi: 'Nguyễn Văn A', ru: 'Иванов' },
-                birthday: { zh: '1990-01-01', ko: '1990-01-01', vi: '1990-01-01', ru: '1990-01-01' },
-                address: { zh: '北京市朝阳区', ko: '서울시 강남구', vi: 'Hà Nội', ru: 'Москва' },
-                position: { zh: '整理', ko: '정리', vi: '정리', ru: '정리' },
-                passport: { zh: 'E12345678', ko: 'M12345678', vi: 'B1234567', ru: 'AB1234567' },
-                phone: { zh: '138-0013-8000', ko: '010-1234-5678', vi: '091-2345-678', ru: '+7 900 123-45-67' },
-                residentNum: { zh: '110101-1990011234', ko: '900101-1234567', vi: '001090-0001234', ru: '123456-7890123' },
-                experience: { zh: '3년', ko: '3년', vi: '3년', ru: '3년' },
-                month: { zh: getCurrentMonth(), ko: getCurrentMonth(), vi: getCurrentMonth(), ru: getCurrentMonth() },
-                day: { zh: getCurrentDay(), ko: getCurrentDay(), vi: getCurrentDay(), ru: getCurrentDay() },
-                checkmark: { zh: '✓', ko: '✓', vi: '✓', ru: '✓' },
-                signature: { zh: '张三', ko: '김철수', vi: 'Nguyễn Văn A', ru: 'Иванов' }
-            };
-            
-            const langKey = lang === 'ko' ? 'ko' : (lang === 'vi' ? 'vi' : (lang === 'ru' ? 'ru' : 'zh'));
-            return examples[baseField]?.[langKey] || examples[baseField]?.zh || '示例';
-        }
-        
-        function getFieldDisplayName(fieldKey) {
-            const match = fieldKey.match(/^(.+)_(\d+)$/);
-            if (match) {
-                return `${match[1]} (${match[2]})`;
-            }
-            return fieldKey;
-        }
-
-        function renderFieldMarkers() {
-            const img = document.getElementById('templateImage');
-            const container = document.getElementById('markersContainer');
-            
-            if (!img || !container) return;
-            
-            const positions = state.fieldPositions[state.currentTemplate][state.currentLang];
-            if (!positions) return;
-            
-            container.innerHTML = '';
-            
-            const displayWidth = img.clientWidth;
-            const displayHeight = img.clientHeight;
-            const naturalWidth = img.naturalWidth;
-            const naturalHeight = img.naturalHeight;
-            
-            const scaleX = displayWidth / naturalWidth;
-            const scaleY = displayHeight / naturalHeight;
-            
-            let markerIndex = 1;
-            Object.keys(positions).forEach(fieldKey => {
-                const pos = positions[fieldKey];
-                if (pos && pos.x !== undefined && pos.y !== undefined) {
-                    const displayX = pos.x * scaleX;
-                    const displayY = pos.y * scaleY;
-                    
-                    const baseField = pos.baseField || fieldKey;
-                    
-                    const marker = document.createElement('div');
-                    marker.className = 'field-marker';
-                    marker.textContent = markerIndex;
-                    marker.style.left = displayX + 'px';
-                    marker.style.top = displayY + 'px';
-                    
-                    const label = document.createElement('div');
-                    label.className = 'field-label';
-                    label.textContent = getFieldDisplayName(fieldKey);
-                    label.style.left = displayX + 'px';
-                    label.style.top = displayY + 'px';
-                    
-                    if (baseField !== 'signature') {
-                        const previewText = document.createElement('div');
-                        previewText.className = 'field-preview-text';
-                        previewText.textContent = getExampleText(fieldKey, state.currentLang);
-                        previewText.style.left = displayX + 'px';
-                        previewText.style.top = displayY + 'px';
-                        previewText.style.fontSize = ((pos.fontSize || 44) * scaleX) + 'px';
-                        previewText.style.color = pos.color || '#000000';
-                        previewText.style.fontFamily = 'Arial';
-                        
-                        container.appendChild(previewText);
-                    } else {
-                        const sigBox = document.createElement('div');
-                        sigBox.style.position = 'absolute';
-                        sigBox.style.left = displayX + 'px';
-                        sigBox.style.top = displayY + 'px';
-                        sigBox.style.width = ((pos.width || 150) * scaleX) + 'px';
-                        sigBox.style.height = ((pos.height || 50) * scaleY) + 'px';
-                        sigBox.style.border = '2px dashed rgba(74, 144, 164, 0.6)';
-                        sigBox.style.backgroundColor = 'rgba(74, 144, 164, 0.1)';
-                        sigBox.style.zIndex = '8';
-                        sigBox.style.pointerEvents = 'none';
-                        container.appendChild(sigBox);
-                    }
-                    
-                    container.appendChild(marker);
-                    container.appendChild(label);
-                    markerIndex++;
-                }
-            });
-        }
-
-        function downloadConfig() {
-            const config = { templates: state.templates, fieldPositions: state.fieldPositions };
-            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'form-config.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function loadConfig(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const config = JSON.parse(event.target.result);
-                        state.templates = config.templates || { contract: { zh: null, ko: null }, safety: { zh: null, ko: null } };
-                        state.fieldPositions = config.fieldPositions || { contract: { zh: {}, ko: {} }, safety: { zh: {}, ko: {} } };
-                        saveToLocalStorage();
-                        render();
-                        setTimeout(renderFieldMarkers, 100);
-                        alert('✅ 配置导入成功!');
-                    } catch {
-                        alert('❌ 配置文件格式错误');
-                    }
-                };
-                reader.readAsText(file);
-            }
-        }
-        
-        function clearAllData() {
-            if (confirm('⚠️ 确定要清空所有配置吗?此操作不可恢复!')) {
-                localStorage.removeItem('formFillerConfig');
-                state.templates = { contract: { zh: null, ko: null }, safety: { zh: null, ko: null } };
-                state.fieldPositions = { contract: { zh: {}, ko: {} }, safety: { zh: {}, ko: {} } };
-                render();
-                alert('✅ 所有配置已清空');
-            }
-        }
-
-        function toggleMode() {
-            if (!state.isAdminMode) {
-                state.showPasswordPage = true;
-                render();
-            } else {
-                state.isAdminMode = false;
-                render();
-            }
-        }
-        
-        function checkPassword() {
-            const passwordInput = document.getElementById('passwordInput');
-            const errorMsg = document.getElementById('errorMsg');
-            const password = passwordInput.value;
-            
-            if (password === 'admin123') {
-                state.showPasswordPage = false;
-                state.isAdminMode = true;
-                render();
-            } else {
-                errorMsg.classList.add('show');
-                passwordInput.value = '';
-                passwordInput.focus();
-                setTimeout(() => errorMsg.classList.remove('show'), 3000);
-            }
-        }
-        
-        function cancelPassword() {
-            state.showPasswordPage = false;
-            render();
-        }
-        
-        function handlePasswordKeyPress(e) {
-            if (e.key === 'Enter') checkPassword();
-        }
-
-        function renderPasswordPage() {
-            return `
-                <div class="container password-container">
-                    <div class="password-icon">🔐</div>
-                    <h2 class="password-title">管理员验证</h2>
-                    <p class="password-subtitle">请输入管理员密码以继续</p>
-                    <input type="password" id="passwordInput" class="password-input" placeholder="请输入密码" onkeypress="handlePasswordKeyPress(event)" autofocus>
-                    <button onclick="checkPassword()" class="password-btn">确认登录</button>
-                    <p id="errorMsg" class="password-error">❌ 密码错误,请重试</p>
-                    <button onclick="cancelPassword()" class="back-btn">返回</button>
+              ${state.templates[state.currentTemplate][state.currentLang] ? `
+                <div class="preview-box">
+                  <p style="margin-bottom:10px; font-weight:600; color:#2E4F7A;">
+                    ${state.repositionTarget ? `🎯 点击图片重新定位: ${getFieldDisplayName(state.repositionTarget)}` : (state.selectedField ? `✅ 已选择: ${state.selectedField}` : '⚠️ 请先选择一个字段')}
+                  </p>
+                  <div class="image-wrapper">
+                    <img id="templateImage" src="${state.templates[state.currentTemplate][state.currentLang]}" alt="template" onclick="handleImageClick(event)" onload="renderFieldMarkers()">
+                    <div id="markersContainer"></div>
+                  </div>
                 </div>
-            `;
-        }
+              ` : '<p class="note" style="text-align:center; padding:40px;">请先上传模板图片</p>'}
 
-        function renderAdminMode() {
-            const t = translations[state.language];
-            const positions = state.fieldPositions[state.currentTemplate][state.currentLang];
-            const fieldsList = getFieldsList(state.currentLang);
-            
-            return `
-                <div class="container admin-container">
-                    <div class="admin-header">
-                        <h1 class="admin-title">管理员配置模式</h1>
-                        <button onclick="toggleMode()" class="toggle-btn">${t.userMode}</button>
-                    </div>
+              <div class="field-buttons" style="gap:15px; margin-top:10px;">
+                <button onclick="downloadConfig()" class="action-btn" style="background:#4A90A4; color:#fff;">📥 导出配置</button>
+                <label class="action-btn" style="background:#3E5F8A; color:#fff;">📤 导入配置
+                  <input type="file" accept=".json" onchange="loadConfig(event)" style="display:none">
+                </label>
+                <button onclick="clearAllData()" class="action-btn" style="background:#C73E1D; color:#fff;">🗑️ 清空配置</button>
+              </div>
+              <p class="note">💾 配置会自动保存到浏览器本地</p>
+            </div>
 
-                    <div class="admin-layout">
-                        <div class="left-panel">
-                            <h3 class="section-title">📋 模板配置</h3>
-                            
-                            <div class="template-tabs">
-                                <button onclick="state.currentTemplate='contract'; render(); setTimeout(renderFieldMarkers, 100);" class="tab-btn ${state.currentTemplate === 'contract' ? 'active' : ''}">劳动合同</button>
-                                <button onclick="state.currentTemplate='safety'; render(); setTimeout(renderFieldMarkers, 100);" class="tab-btn ${state.currentTemplate === 'safety' ? 'active' : ''}">安全协议</button>
-                            </div>
-
-                            <div class="language-tabs">
-                                <button onclick="state.currentLang='zh'; render(); setTimeout(renderFieldMarkers, 100);" class="lang-tab ${state.currentLang === 'zh' ? 'active' : ''}">中文/越南语/俄语</button>
-                                <button onclick="state.currentLang='ko'; render(); setTimeout(renderFieldMarkers, 100);" class="lang-tab ${state.currentLang === 'ko' ? 'active' : ''}">한국어</button>
-                            </div>
-
-                            <div class="upload-section">
-                                <label>📤 上传 ${state.currentTemplate === 'contract' ? '劳动合同' : '安全协议'} 模板 (${state.currentLang === 'zh' ? '中文/越南语/俄语' : '한국어'})</label>
-                                <input type="file" accept="image/*" onchange="handleTemplateUpload(event, '${state.currentTemplate}', '${state.currentLang}')" style="margin-top: 10px;">
-                            </div>
-
-                            <div class="form-group">
-                                <label>🎯 选择字段 (点击后再点击图片定位)</label>
-                                <div class="field-buttons">
-                                    ${fieldsList.map(field => 
-                                        `<button onclick="state.selectedField='${field}'; render();" class="field-btn ${state.selectedField === field ? 'active' : ''}">${field === 'checkmark' ? '✓' : field}</button>`
-                                    ).join('')}
-                                </div>
-                                
-                                <div class="mode-switch">
-                                    <input type="checkbox" id="multiInstanceMode" ${state.multiInstanceMode ? 'checked' : ''} onchange="state.multiInstanceMode = this.checked; render();">
-                                    <label for="multiInstanceMode">🔄 多实例模式(同一字段创建多个位置)</label>
-                                </div>
-                                
-                                <p class="hint-text">
-                                    ${state.multiInstanceMode ? 
-                                        '✅ 多实例模式已开启:点击图片将创建新的字段实例(name → name_2 → name_3...)' : 
-                                        '🔍 普通模式:点击图片将更新已选字段的位置'}
-                                </p>
-                                <p class="hint-text" style="color: #4A90A4;">💡 月份/日期/对号字段会自动填充当前值,无需用户输入</p>
-                            </div>
-
-                            ${state.templates[state.currentTemplate][state.currentLang] ? `
-                                <div class="preview-box">
-                                    <p style="margin-bottom: 10px; font-weight: 600; color: #2E4F7A;">
-                                        ${state.repositionTarget ? 
-                                            `🎯 点击图片重新定位: ${getFieldDisplayName(state.repositionTarget)}` : 
-                                            (state.selectedField ? `✅ 已选择: ${state.selectedField}` : '⚠️ 请先选择一个字段')}
-                                    </p>
-                                    <div class="image-wrapper">
-                                        <img id="templateImage" src="${state.templates[state.currentTemplate][state.currentLang]}" alt="template" onclick="handleImageClick(event)" onload="renderFieldMarkers()">
-                                        <div id="markersContainer"></div>
-                                    </div>
-                                </div>
-                            ` : '<p style="color: #5A7A8F; text-align: center; padding: 40px;">请先上传模板图片</p>'}
-
-                            <div class="action-buttons">
-                                <button onclick="downloadConfig()" class="action-btn export-btn">📥 导出配置</button>
-                                <label class="action-btn import-label">
-                                    📤 导入配置
-                                    <input type="file" accept=".json" onchange="loadConfig(event)" style="display:none">
-                                </label>
-                                <button onclick="clearAllData()" class="action-btn" style="background: #C73E1D; color: white;">
-                                    🗑️ 清空配置
-                                </button>
-                            </div>
-                            
-                            <p style="text-align: center; font-size: 12px; color: #4A90A4; margin-top: 10px;">
-                                💾 配置已自动保存到浏览器本地存储
-                            </p>
+            <div class="right-panel">
+              <h3 class="section-title">⚙️ 已配置字段</h3>
+              ${Object.keys(positions).length===0 ? '<p class="note" style="text-align:center; padding:20px;">暂无配置</p>' :
+                `<div class="field-list">
+                  ${Object.keys(positions).map(k=>{
+                    const pos = positions[k]; const base = pos.baseField || k;
+                    return `
+                      <div class="field-item">
+                        <div class="field-item-header">
+                          <span class="field-name">📌 ${getFieldDisplayName(k)}</span>
+                          <div class="field-actions">
+                            <button onclick="repositionField('${k}')" class="reposition-btn">重新定位</button>
+                            <button onclick="editField('${k}')" class="edit-btn">编辑</button>
+                            <button onclick="deleteField('${k}')" class="delete-btn">删除</button>
+                          </div>
                         </div>
+                        ${state.editingField===k ? `
+                          <div class="param-editor">
+                            <div class="param-row"><span class="param-label">字体大小:</span><input type="number" id="editFontSize" value="${pos.fontSize||44}" min="8" max="120"></div>
+                            <div class="param-row"><span class="param-label">颜色:</span><input type="color" id="editColor" value="${pos.color||'#000000'}" style="height:40px;"></div>
+                            ${base==='signature' ? `
+                              <div class="param-row"><span class="param-label">宽度:</span><input type="number" id="editWidth" value="${pos.width||150}" min="50" max="500"></div>
+                              <div class="param-row"><span class="param-label">高度:</span><input type="number" id="editHeight" value="${pos.height||50}" min="20" max="200"></div>` : ''}
+                            <button onclick="saveFieldParams()" class="save-param-btn">✅ 保存参数</button>
+                          </div>` :
+                          `<div class="field-params" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12px; color:#5A7A8F;">
+                            <div>X: ${pos.x}</div><div>Y: ${pos.y}</div>
+                            <div>字号: ${pos.fontSize||44}px</div>
+                            <div>颜色: <span style="display:inline-block; width:20px; height:20px; background:${pos.color||'#000'}; border:1px solid #ccc; vertical-align:middle;"></span></div>
+                            ${pos.width?`<div>宽: ${pos.width}px</div>`:''}
+                            ${pos.height?`<div>高: ${pos.height}px</div>`:''}
+                          </div>`}
+                      </div>`;
+                  }).join('')}
+                </div>`}
+            </div>
+          </div>
+        </div>
+      `;
+    }
 
-                        <div class="right-panel">
-                            <h3 class="section-title">⚙️ 已配置字段</h3>
-                            
-                            ${Object.keys(positions).length === 0 ? 
-                                '<p style="color: #5A7A8F; text-align: center; padding: 20px;">暂无配置</p>' :
-                                `<div class="field-list">
-                                    ${Object.keys(positions).map(fieldKey => {
-                                        const pos = positions[fieldKey];
-                                        const baseField = pos.baseField || fieldKey;
-                                        return `
-                                            <div class="field-item">
-                                                <div class="field-item-header">
-                                                    <span class="field-name">📌 ${getFieldDisplayName(fieldKey)}</span>
-                                                    <div class="field-actions">
-                                                        <button onclick="repositionField('${fieldKey}')" class="reposition-btn ${state.repositionTarget === fieldKey ? 'active' : ''}">
-                                                            ${state.repositionTarget === fieldKey ? '点击图片' : '重新定位'}
-                                                        </button>
-                                                        <button onclick="editField('${fieldKey}')" class="edit-btn">编辑</button>
-                                                        <button onclick="deleteField('${fieldKey}')" class="delete-btn">删除</button>
-                                                    </div>
-                                                </div>
-                                                
-                                                ${state.editingField === fieldKey ? `
-                                                    <div class="param-editor">
-                                                        <div class="param-row">
-                                                            <span class="param-label">字体大小:</span>
-                                                            <input type="number" id="editFontSize" value="${pos.fontSize || 44}" min="8" max="120">
-                                                        </div>
-                                                        <div class="param-row">
-                                                            <span class="param-label">颜色:</span>
-                                                            <input type="color" id="editColor" value="${pos.color || '#000000'}" style="height: 40px;">
-                                                        </div>
-                                                        ${baseField === 'signature' ? `
-                                                            <div class="param-row">
-                                                                <span class="param-label">宽度:</span>
-                                                                <input type="number" id="editWidth" value="${pos.width || 150}" min="50" max="500">
-                                                            </div>
-                                                            <div class="param-row">
-                                                                <span class="param-label">高度:</span>
-                                                                <input type="number" id="editHeight" value="${pos.height || 50}" min="20" max="200">
-                                                            </div>
-                                                        ` : ''}
-                                                        <button onclick="saveFieldParams()" class="save-param-btn">✅ 保存参数</button>
-                                                    </div>
-                                                ` : `
-                                                    <div class="field-params">
-                                                        <div>X: ${pos.x}</div>
-                                                        <div>Y: ${pos.y}</div>
-                                                        <div>字号: ${pos.fontSize || 44}px</div>
-                                                        <div>颜色: <span style="display: inline-block; width: 20px; height: 20px; background: ${pos.color || '#000000'}; border: 1px solid #ccc; vertical-align: middle;"></span></div>
-                                                        ${pos.width ? `<div>宽: ${pos.width}px</div>` : ''}
-                                                        ${pos.height ? `<div>高: ${pos.height}px</div>` : ''}
-                                                    </div>
-                                                `}
-                                            </div>
-                                        `;
-                                    }).join('')}
-                                </div>`
-                            }
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+    function renderUserMode(){
+      const t = translations[state.language];
+      const fields = getFieldsList(state.language).filter(f=>!['signature','month','day','checkmark'].includes(f));
+      return `
+        <div class="container">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h1>${t.title}</h1>
+            <button onclick="toggleMode()" class="toggle-btn">${t.adminMode}</button>
+          </div>
 
-        function renderUserMode() {
-            const t = translations[state.language];
-            const fields = getFieldsList(state.language).filter(f => !['signature', 'month', 'day', 'checkmark'].includes(f));
-            
-            return `
-                <div class="container">
-                    <h1>${t.title}</h1>
-                    <div class="form-group">
-                        <label>${t.selectLanguage}</label>
-                        <div class="language-buttons">
-                            ${[{ code: 'zh', label: '中文' }, { code: 'ko', label: '한국어' }, { code: 'vi', label: 'Tiếng Việt' }, { code: 'ru', label: 'Русский' }].map(lang => 
-                                `<button onclick="state.language='${lang.code}'; render();" class="lang-btn ${state.language === lang.code ? 'active' : ''}">${lang.label}</button>`
-                            ).join('')}
-                        </div>
-                    </div>
-                    ${fields.map(field => {
-                        if (field === 'position') {
-                            return `
-                                <div class="form-group">
-                                    <label>${t.position}</label>
-                                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                        <button onclick="state.positionMode='custom'; render();" class="lang-btn ${state.positionMode === 'custom' ? 'active' : ''}" style="flex: 1;">${t.positionCustom}</button>
-                                        <button onclick="state.positionMode='select'; render();" class="lang-btn ${state.positionMode === 'select' ? 'active' : ''}" style="flex: 1;">${t.positionSelect}</button>
-                                    </div>
-                                    ${state.positionMode === 'custom' ? 
-                                        `<input type="text" value="${state.formData[field] || ''}" oninput="state.formData['${field}'] = this.value">` :
-                                        `<select onchange="state.formData['${field}'] = this.value" style="width: 100%; padding: 10px 15px; border: 2px solid #D4E4E7; border-radius: 8px; font-size: 14px;">
-                                            <option value="">-- ${t.positionSelect} --</option>
-                                            ${positionOptions[state.language].map(opt => 
-                                                `<option value="${opt}" ${state.formData[field] === opt ? 'selected' : ''}>${opt}</option>`
-                                            ).join('')}
-                                        </select>`
-                                    }
-                                </div>
-                            `;
-                        } else if (field === 'phone') {
-                            return `
-                                <div class="form-group">
-                                    <label>${t.phone}</label>
-                                    <input type="text" value="${state.formData[field] || ''}" 
-                                        oninput="state.formData['${field}'] = formatPhoneNumber(this.value); this.value = state.formData['${field}']">
-                                </div>
-                            `;
-                        } else if (field === 'residentNum') {
-                            return `
-                                <div class="form-group">
-                                    <label>${t.residentNum}</label>
-                                    <input type="text" value="${state.formData[field] || ''}" 
-                                        oninput="state.formData['${field}'] = formatResidentNum(this.value); this.value = state.formData['${field}']">
-                                </div>
-                            `;
-                        } else if (field === 'experience') {
-                            return `
-                                <div class="form-group">
-                                    <label>${t.experience}</label>
-                                    <div style="position: relative;">
-                                        <input type="text" value="${state.formData[field] || ''}" 
-                                            oninput="state.formData['${field}'] = formatExperience(this.value); this.value = state.formData['${field}']"
-                                            style="padding-right: 50px;">
-                                        <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #5A7A8F; font-size: 14px; pointer-events: none;">${t.experienceYears}</span>
-                                    </div>
-                                </div>
-                            `;
-                        } else if (field === 'address') {
-                            return `
-                                <div class="form-group">
-                                    <label>${t.address}</label>
-                                    <div style="display: flex; gap: 10px;">
-                                        <input type="text" value="${state.formData[field] || ''}" 
-                                            oninput="state.formData['${field}'] = this.value"
-                                            style="flex: 1;">
-                                        <button onclick="openAddressSearch()" type="button" 
-                                            style="padding: 10px 15px; background: #3E5F8A; color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap;">
-                                            🗺️ ${t.addressSearch}
-                                        </button>
-                                    </div>
-                                    <p style="font-size: 11px; color: #5A7A8F; margin-top: 5px;">${t.addressHint}</p>
-                                </div>
-                            `;
-                        } else {
-                            return `
-                                <div class="form-group">
-                                    <label>${t[field]}</label>
-                                    <input type="${field === 'birthday' ? 'date' : 'text'}" 
-                                        value="${state.formData[field] || ''}" 
-                                        oninput="state.formData['${field}'] = this.value">
-                                </div>
-                            `;
-                        }
-                    }).join('')}
-                    <div class="form-group">
-                        <label>${t.signature}</label>
-                        <div class="signature-container">
-                            <canvas id="signatureCanvas" width="400" height="150"></canvas>
-                        </div>
-                        <button onclick="clearSignature(); render();" class="clear-btn">${t.clearSignature}</button>
-                    </div>
-                    <button onclick="generateForms()" class="generate-btn">📥 ${t.generate}</button>
-                    <p class="note">${t.generateNote}</p>
-                    <button onclick="toggleMode()" class="toggle-btn" style="width:100%; margin-top:15px">${t.adminMode}</button>
-                </div>
-            `;
-        }
+          <div class="form-group">
+            <label>${t.selectLanguage}</label>
+            <div class="language-buttons">
+              ${[{code:'zh',label:'中文'},{code:'ko',label:'한국어'},{code:'vi',label:'Tiếng Việt'},{code:'ru',label:'Русский'}].map(l=>`
+                <button onclick=\"state.language='${l.code}'; render();\" class=\"lang-btn ${state.language===l.code?'active':''}\">${l.label}</button>`).join('')}
+            </div>
+          </div>
 
-        function render() {
-            const app = document.getElementById('app');
-            if (state.showPasswordPage) {
-                app.innerHTML = renderPasswordPage();
-                return;
+          ${fields.map(field=>{
+            if(field==='position'){
+              return `
+                <div class="form-group">
+                  <label>${t.position}</label>
+                  <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <button onclick="state.positionMode='custom'; render();" class="lang-btn ${state.positionMode==='custom'?'active':''}" style="flex:1;">${t.positionCustom}</button>
+                    <button onclick="state.positionMode='select'; render();" class="lang-btn ${state.positionMode==='select'?'active':''}" style="flex:1;">${t.positionSelect}</button>
+                  </div>
+                  ${state.positionMode==='custom'
+                    ? `<input type="text" value="${state.formData[field]||''}" oninput="state.formData['${field}']=this.value">`
+                    : `<select onchange="state.formData['${field}']=this.value"><option value="">-- ${t.positionSelect} --</option>${
+                        positionOptions[state.language].map(opt=>`<option value=\"${opt}\" ${state.formData[field]===opt?'selected':''}>${opt}</option>`).join('')
+                      }</select>`}
+                </div>`;
+            }else if(field==='phone'){
+              return `
+                <div class="form-group">
+                  <label>${t.phone}</label>
+                  <input type="text" value="${state.formData[field]||''}" oninput="
+                    (function(v){ const n=v.replace(/\\D/g,''); let out=n.length<=3?n:n.length<=7? n.slice(0,3)+'-'+n.slice(3) : n.slice(0,3)+'-'+n.slice(3,7)+'-'+n.slice(7,11); state.formData['${field}']=out; })(this.value);
+                    this.value = state.formData['${field}'];
+                  ">
+                </div>`;
+            }else if(field==='residentNum'){
+              return `
+                <div class="form-group">
+                  <label>居民/身份证号</label>
+                  <input type="text" value="${state.formData[field]||''}" oninput="
+                    (function(v){ const n=v.replace(/\\D/g,''); const out = n.length<=6 ? n : n.slice(0,6)+'-'+n.slice(6,13); state.formData['${field}']=out; })(this.value);
+                    this.value = state.formData['${field}'];
+                  ">
+                </div>`;
+            }else if(field==='experience'){
+              return `
+                <div class="form-group">
+                  <label>${t.experience}</label>
+                  <div style="position:relative;">
+                    <input type="text" value="${state.formData[field]||''}" oninput="(function(v){ const n=v.replace(/\\D/g,''); state.formData['${field}']=n; })(this.value); this.value = state.formData['${field}'];" style="padding-right:50px;">
+                    <span style="position:absolute; right:15px; top:50%; transform:translateY(-50%); color:#5A7A8F; font-size:14px; pointer-events:none;">${t.experienceYears}</span>
+                  </div>
+                </div>`;
+            }else if(field==='address'){
+              return `
+                <div class="form-group">
+                  <label>${t.address}</label>
+                  <div style="display:flex; gap:10px;">
+                    <input type="text" value="${state.formData[field]||''}" oninput="state.formData['${field}']=this.value" style="flex:1;">
+                    <button type="button" onclick="openAddressSearch()" class="lang-btn" style="background:#3E5F8A; color:#fff;">🗺️ ${t.addressSearch}</button>
+                  </div>
+                  <p class="note">${t.addressHint}</p>
+                </div>`;
+            }else{
+              return `
+                <div class="form-group">
+                  <label>${t[field] || field}</label>
+                  <input type="${field==='birthday' ? 'date' : 'text'}" value="${state.formData[field]||''}" oninput="state.formData['${field}']=this.value">
+                </div>`;
             }
-            
-            app.innerHTML = state.isAdminMode ? renderAdminMode() : renderUserMode();
-            
-            if (state.isAdminMode) {
-                setTimeout(renderFieldMarkers, 100);
-            } else {
-                signatureCanvas = document.getElementById('signatureCanvas');
-                if (signatureCanvas) {
-                    ctx = signatureCanvas.getContext('2d');
-                    ctx.strokeStyle = '#000';
-                    ctx.lineWidth = 2;
-                    ctx.lineCap = 'round';
-                    signatureCanvas.addEventListener('mousedown', startDrawing);
-                    signatureCanvas.addEventListener('mousemove', draw);
-                    signatureCanvas.addEventListener('mouseup', stopDrawing);
-                    signatureCanvas.addEventListener('mouseleave', stopDrawing);
-                    signatureCanvas.addEventListener('touchstart', startDrawing);
-                    signatureCanvas.addEventListener('touchmove', draw);
-                    signatureCanvas.addEventListener('touchend', stopDrawing);
-                }
-            }
-        }
-    </script>
+          }).join('')}
+
+          <div class="form-group">
+            <label>${t.signature}</label>
+            <div class="signature-container">
+              <canvas id="signatureCanvas" width="600" height="180"></canvas>
+            </div>
+            <button onclick="clearSignature(); render();" class="clear-btn">${t.clearSignature}</button>
+          </div>
+
+          <button class="generate-btn" onclick="generateForms()">🖼️ ${t.generate}</button>
+          <p class="note">${t.generateNote}</p>
+        </div>
+      `;
+    }
+
+    function openAddressSearch(){
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px;';
+
+      const content = document.createElement('div');
+      content.style.cssText = 'background:#fff; border-radius:12px; width:95%; max-width:1100px; height:90vh; max-height:850px; display:flex; flex-direction:column; overflow:hidden;';
+      content.innerHTML = `
+        <div style="padding:16px 20px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
+          <strong>🗺️ Naver 地图 - 地址搜索</strong>
+          <button class="lang-btn" style="background:#C73E1D; color:#fff;" onclick="document.getElementById('mapModal').remove(); document.body.style.overflow='';">✕ 关闭</button>
+        </div>
+        <div style="flex:1; padding:16px; display:flex; flex-direction:column; gap:12px; background:#f9fafb;">
+          <div style="background:#F0F8F9; border:2px solid #A8DADC; padding:12px; border-radius:8px; color:#2E4F7A;">
+            1) 在下方 Naver 地图中搜索你的地址 → 2) 复制完整地址 → 3) 返回表单粘贴
+          </div>
+          <iframe src="https://map.naver.com/" style="width:100%; flex:1; border:2px solid #e5e7eb; border-radius:8px; background:#fff;"></iframe>
+        </div>`;
+
+      const wrapper = document.createElement('div');
+      wrapper.id = 'mapModal'; wrapper.appendChild(content);
+      overlay.appendChild(content);
+      wrapper.appendChild(overlay);
+      document.body.appendChild(wrapper);
+      document.body.style.overflow = 'hidden';
+      overlay.addEventListener('click', (e)=>{ if(e.target===overlay){ wrapper.remove(); document.body.style.overflow=''; } });
+    }
+
+    // ===================== 主渲染入口 =====================
+    function render(){
+      const app = document.getElementById('app');
+      if(state.showPasswordPage){ app.innerHTML = renderPasswordPage(); return; }
+      app.innerHTML = state.isAdminMode ? renderAdminMode() : renderUserMode();
+
+      // 绑定签名板
+      const canvas = document.getElementById('signatureCanvas');
+      if(canvas){
+        signatureCanvas = canvas; sigCtx = canvas.getContext('2d'); sigCtx.lineWidth = 2; sigCtx.lineCap='round';
+        canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw); window.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing, {passive:true}); canvas.addEventListener('touchmove', draw, {passive:false}); window.addEventListener('touchend', stopDrawing);
+      }
+    }
+
+    // 初始化
+    initConfig();
+  </script>
 </body>
 </html>
